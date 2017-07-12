@@ -7,10 +7,10 @@ handles form submit and update.
 
 ## Features
 
-- Saving [react-jsonschema-form](https://github.com/mozilla-services/react-jsonschema-form) related json with configurable REST api
+- Saving [react-jsonschema-form](https://github.com/mozilla-services/react-jsonschema-form) related json with configurable `REST` or `GraphQL` api
 - Optional submitting form updates on data change, with `PATCH` and `PUT` requests
-- Configuration read through REST
-- Configurable REST authentication on requests
+- `schema`, `uiSchema` and others  read through `REST` or `GraphQL`
+- Configurable authentication
 
 ## Installation
 
