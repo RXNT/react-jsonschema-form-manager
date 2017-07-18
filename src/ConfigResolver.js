@@ -1,7 +1,10 @@
 import "whatwg-fetch";
 
-export class StaticConfigResolver {
+class ConfigResolver {}
+
+export class StaticConfigResolver extends ConfigResolver {
   constructor(configs, delay = 0) {
+    super();
     this.configs = configs;
     this.delay = delay;
   }
@@ -13,8 +16,9 @@ export class StaticConfigResolver {
   };
 }
 
-export class RESTConfigResolver {
+export class RESTConfigResolver extends ConfigResolver {
   constructor(url, credentials) {
+    super();
     this.url = url;
     this.credentials = credentials;
     if (
@@ -36,5 +40,24 @@ export class RESTConfigResolver {
       let req = new Request(this.url);
       return fetch(this.credentials(req)).then(res => res.json());
     }
+  };
+}
+
+export class GraphQLConfigResolver extends ConfigResolver {
+  constructor(url, credentials) {
+    super();
+    this.restResolver = new RESTConfigResolver(url, credentials);
+  }
+
+  resolve = () => {
+    return this.restResolver.resolve().then(({ data, error }) => {
+      return new Promise((resolve, reject) => {
+        if (error) {
+          reject(new Error(error));
+        } else {
+          resolve(data);
+        }
+      });
+    });
   };
 }

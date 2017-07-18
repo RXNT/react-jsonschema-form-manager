@@ -5,6 +5,7 @@ import withManager from "../../src";
 import {
   StaticConfigResolver,
   RESTConfigResolver,
+  GraphQLConfigResolver,
 } from "../../src/ConfigResolver";
 
 let config = {
@@ -72,11 +73,17 @@ let config = {
   },
 };
 
-new StaticConfigResolver(config, 1000);
-
-let configResolver = new RESTConfigResolver(
+let staticResolver = new StaticConfigResolver(config, 1000);
+let restResolver = new RESTConfigResolver(
   `http://${window.location.host}/app/config/simple.json`
 );
+let graphQLResolver = new GraphQLConfigResolver(
+  `http://${window.location.host}/app/config/graphQL.json`
+);
+
+let allResolvers = [staticResolver, restResolver, graphQLResolver];
+
+let configResolver = allResolvers[2];
 
 let FormToDisplay = withManager(playground(Form));
 

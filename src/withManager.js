@@ -15,7 +15,10 @@ class DefaultErrorScreen extends Component {
   render() {
     return (
       <div className="container">
-        <h1>Error</h1>
+        <h4>Error</h4>
+        <h2>
+          {this.props.error.message}
+        </h2>
       </div>
     );
   }
@@ -54,7 +57,7 @@ export default function withManager(
       if (this.state.isLoading) {
         return <LoadingScreen />;
       } else if (this.state.isError) {
-        return <ErrorScreen />;
+        return <ErrorScreen error={this.state.error} />;
       } else {
         let configs = Object.assign({}, this.props, this.state.config);
         return <FormComponent {...configs} />;
