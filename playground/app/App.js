@@ -7,7 +7,10 @@ import {
   RESTConfigResolver,
   GraphQLConfigResolver,
 } from "../../src/ConfigResolver";
-import { LocalStorageFormManager } from "../../src/FormManager";
+import {
+  LocalStorageFormManager,
+  RESTFormManager,
+} from "../../src/FormManager";
 
 let config = {
   schema: {
@@ -74,20 +77,22 @@ let config = {
   },
 };
 
+let host = window.location.host;
 let staticResolver = new StaticConfigResolver(config, 1000);
 let restResolver = new RESTConfigResolver(
-  `http://${window.location.host}/app/config/simple.json`
+  `http://${host}/app/config/simple.json`
 );
 let graphQLResolver = new GraphQLConfigResolver(
-  `http://${window.location.host}/app/config/graphQL.json`
+  `http://${host}/app/config/graphQL.json`
 );
 
 let allResolvers = [staticResolver, restResolver, graphQLResolver];
 
 let localStorageManager = new LocalStorageFormManager();
-let allManagers = [localStorageManager];
+let restManager = new RESTFormManager(`http://${host}/app/endpoint`);
+let allManagers = [localStorageManager, restManager];
 
-let FormToDisplay = withManager(allManagers[0], playground(Form));
+let FormToDisplay = withManager(allManagers[1], playground(Form));
 
 export default class ResultForm extends Component {
   render() {
