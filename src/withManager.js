@@ -1,21 +1,65 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 
-export default function withManager(FormComponent, LoadingScreen, ErrroScreen) {
+class DefaultLoadingScreen extends Component {
+  render() {
+    return (
+      <div className="container">
+        <h1>Loading</h1>
+      </div>
+    );
+  }
+}
+
+class DefaultErrorScreen extends Component {
+  render() {
+    return (
+      <div className="container">
+        <h1>Error</h1>
+        {this.props.error}
+      </div>
+    );
+  }
+}
+
+export default function withManager(
+  FormComponent,
+  LoadingScreen = DefaultLoadingScreen,
+  ErrorScreen = DefaultErrorScreen
+) {
   class FormWithManager extends Component {
     constructor(props) {
       super(props);
 
-      this.resolveSchema(this.props.configResolver);
+      this.state = { isLoading: true, isError: false };
     }
 
-    resolveSchema = schemaResolver => {
-      schemaResolver.resolve().then(config => this.setState({ config }));
+    componentDidMount() {
+      this.resolveConfig(this.props.configResolver);
+    }
+
+    resolveConfig = configResolver => {
+      this.setState({ isLoading: true, isError: false });
+      configResolver
+        .resolve()
+        .then(config => {
+          this.setState({ config });
+          this.setState({ isLoading: false, isEqual: false });
+        })
+        .catch(error => {
+          this.setState({ isLoading: false, isError: true, error });
+        });
     };
 
     render() {
-      let configs = Object.assign({}, this.props, this.state.config);
-      return <FormComponent {...configs} />;
+      if (this.state.isLoading) {
+        return <LoadingScreen />;
+      } else if (this.state.isError) {
+        return <ErrorScreen error={this.state.error} />;
+      } else {
+        let configs = Object.assign({}, this.props, this.state.config);
+        return <FormComponent {...configs} />;
+      }
     }
   }
 

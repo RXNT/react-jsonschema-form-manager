@@ -1,10 +1,6 @@
-import React, { Component } from "react";
-import Form from "react-jsonschema-form";
-import playground from "react-jsonschema-form-playground";
-import withManager from "../../src/withManager";
-import { StaticConfigResolver } from "../../src/ConfigResolver";
+import { StaticConfigResolver } from "../src/ConfigResolver";
 
-let config = {
+let conf = {
   schema: {
     type: "object",
     required: ["firstName", "lastName"],
@@ -69,12 +65,10 @@ let config = {
   },
 };
 
-let configResolver = new StaticConfigResolver(config, 1000);
+let configResolver = new StaticConfigResolver(conf);
 
-let FormToDisplay = withManager(playground(Form));
-
-export default class ResultForm extends Component {
-  render() {
-    return <FormToDisplay configResolver={configResolver} />;
-  }
-}
+test("Simple resolve", () => {
+  return configResolver
+    .resolve()
+    .then(readConf => expect(readConf).toEqual(conf));
+});

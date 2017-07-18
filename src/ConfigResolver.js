@@ -3,8 +3,13 @@ export class ConfigResolver {
 }
 
 export class StaticConfigResolver {
-  constructor(configs) {
+  constructor(configs, delay = 0) {
     this.configs = configs;
+    this.delay = delay;
   }
-  resolve = () => Promise.resolve(this.configs);
+  resolve = () => {
+    return new Promise(resolve => {
+      setTimeout(() => resolve(this.configs), this.delay);
+    });
+  };
 }
