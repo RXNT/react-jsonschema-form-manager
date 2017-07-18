@@ -9,13 +9,7 @@ export class LocalStorageFormManager extends FormManager {
   }
   submit = formData => {
     return new Promise(resolve => {
-      localStorage.setItem(this.key, formData);
-      resolve(formData);
-    });
-  };
-  update = formData => {
-    return new Promise(resolve => {
-      localStorage.setItem(this.key, formData);
+      localStorage.setItem(this.key, JSON.stringify(formData));
       resolve(formData);
     });
   };
@@ -26,7 +20,26 @@ export class RESTFormManager extends FormManager {
     super();
     this.url = url;
     this.credentials = credentials;
+    if (
+      credentials !== undefined &&
+      credentials !== null &&
+      typeof this.credentials !== "object" &&
+      typeof this.credentials !== "function"
+    ) {
+      throw new Error("Credentials can be object or function(req)");
+    }
   }
+  submit = formData => {
+    let req = new Request(this.url, {
+      method: "POST",
+      body: JSON.stringify(formData),
+    });
+    if (this.credentials === undefined || this.credentials === null) {
+      return fetch(req).then(res => res.json());
+    } else if (typeof this.credentials === "object") {
+      return fetch(req, this.credentials).then(res => res.json());
+    } else {
+      return fetch(this.credentials(req)).then(res => res.json());
+    }
+  };
 }
-
-export class GraphQLFormManager {}

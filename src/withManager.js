@@ -25,6 +25,7 @@ class DefaultErrorScreen extends Component {
 }
 
 export default function withManager(
+  formManager,
   FormComponent,
   LoadingScreen = DefaultLoadingScreen,
   ErrorScreen = DefaultErrorScreen
@@ -53,6 +54,13 @@ export default function withManager(
         });
     };
 
+    onSubmit = state => {
+      let submit = formManager.submit(state.formData);
+      if (this.props.onSubmit) {
+        submit.then(() => this.props.onSubmit(state));
+      }
+    };
+
     render() {
       if (this.state.isLoading) {
         return <LoadingScreen />;
@@ -60,7 +68,7 @@ export default function withManager(
         return <ErrorScreen error={this.state.error} />;
       } else {
         let configs = Object.assign({}, this.props, this.state.config);
-        return <FormComponent {...configs} />;
+        return <FormComponent {...configs} onSubmit={this.onSubmit} />;
       }
     }
   }

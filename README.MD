@@ -11,10 +11,10 @@ handles form submit and update.
 
 ## Features
 
-- Saving [react-jsonschema-form](https://github.com/mozilla-services/react-jsonschema-form) related json with configurable `REST` or `GraphQL` api
+- Saving [react-jsonschema-form](https://github.com/mozilla-services/react-jsonschema-form) related json with configurable `REST` api
 - Optional submitting form updates on data change, with `PATCH` and `PUT` requests
-- `schema`, `uiSchema` and others  read through `REST` or `GraphQL`
-- Configurable authentication
+- Form configuration sync and async load support with `REST`
+- Configurable authentication support
 
 ## Installation
 
@@ -25,3 +25,5 @@ npm install --s react-jsonschema-form-manager
 ```
 
 ## Usage
+
+
