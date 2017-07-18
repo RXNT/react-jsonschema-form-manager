@@ -92,10 +92,15 @@ let localStorageManager = new LocalStorageFormManager();
 let restManager = new RESTFormManager(`http://${host}/app/endpoint`);
 let allManagers = [localStorageManager, restManager];
 
-let FormToDisplay = withManager(allManagers[1], playground(Form));
+let FormToDisplay = withManager(playground(Form));
 
 export default class ResultForm extends Component {
   render() {
-    return <FormToDisplay configResolver={allResolvers[2]} />;
+    return (
+      <FormToDisplay
+        configResolver={allResolvers[2]}
+        manager={allManagers[1]}
+      />
+    );
   }
 }

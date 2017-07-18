@@ -25,7 +25,6 @@ class DefaultErrorScreen extends Component {
 }
 
 export default function withManager(
-  formManager,
   FormComponent,
   LoadingScreen = DefaultLoadingScreen,
   ErrorScreen = DefaultErrorScreen
@@ -55,7 +54,7 @@ export default function withManager(
     };
 
     onSubmit = state => {
-      let submit = formManager.submit(state.formData);
+      let submit = this.props.manager.submit(state.formData);
       if (this.props.onSubmit) {
         submit.then(() => this.props.onSubmit(state));
       }
@@ -76,7 +75,7 @@ export default function withManager(
   FormWithManager.propTypes = {
     updateStrategy: PropTypes.object,
     configResolver: PropTypes.object.isRequired,
-    sign: PropTypes.func,
+    manager: PropTypes.object.isRequired,
   };
 
   return FormWithManager;
