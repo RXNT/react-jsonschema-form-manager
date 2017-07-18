@@ -1,0 +1,12 @@
+sudo: false
+language:
+- node_js
+node_js:
+- "6"
+env:
+- ACTION="run lint"
+#- ACTION="run cs-check"
+- ACTION="run dist"
+- ACTION="test && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
+script:
+- npm $ACTION

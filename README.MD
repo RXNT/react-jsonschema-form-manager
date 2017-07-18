@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/RxNT/react-jsonschema-form-manager.svg?branch=master)](https://travis-ci.org/RxNT/react-jsonschema-form-manager)
+[![Coverage Status](https://coveralls.io/repos/github/RxNT/react-jsonschema-form-manager/badge.svg?branch=master)](https://coveralls.io/github/RxNT/react-jsonschema-form-manager?branch=master)
+
+
 # react-jsonschema-form-manager
 --------
 
@@ -14,7 +18,7 @@ handles form submit and update.
 
 ## Installation
 
-Install `react-jsonschema-form-conditionals` by running:
+Install `react-jsonschema-form-manager` by running:
 
 ```bash
 npm install --s react-jsonschema-form-manager
