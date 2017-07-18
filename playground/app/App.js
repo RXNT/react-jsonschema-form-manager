@@ -1,8 +1,11 @@
 import React, { Component } from "react";
 import Form from "react-jsonschema-form";
 import playground from "react-jsonschema-form-playground";
-import withManager from "../../src/withManager";
-import { StaticConfigResolver } from "../../src/ConfigResolver";
+import withManager from "../../src";
+import {
+  StaticConfigResolver,
+  RESTConfigResolver,
+} from "../../src/ConfigResolver";
 
 let config = {
   schema: {
@@ -69,7 +72,11 @@ let config = {
   },
 };
 
-let configResolver = new StaticConfigResolver(config, 1000);
+new StaticConfigResolver(config, 1000);
+
+let configResolver = new RESTConfigResolver(
+  `http://${window.location.host}/app/config/simple.json`
+);
 
 let FormToDisplay = withManager(playground(Form));
 
