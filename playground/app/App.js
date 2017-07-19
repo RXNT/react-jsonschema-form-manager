@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import Form from "react-jsonschema-form";
-import playground from "react-jsonschema-form-playground";
 import withManager from "../../src";
+import playground from "react-jsonschema-form-playground";
 import {
   StaticConfigResolver,
   RESTConfigResolver,

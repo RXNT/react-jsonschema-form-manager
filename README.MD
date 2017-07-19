@@ -26,4 +26,42 @@ npm install --s react-jsonschema-form-manager
 
 ## Usage
 
+The simplest use case would be to load static properties and save them in `localStorage`,
+this an be done like this:
+
+```js
+import React from "react";
+import ReactDOM from "react-dom";
+import Form from "react-jsonschema-form";
+import withManager from "react-jsonschema-form-manager";
+import { LocalStorageFormManager } from "react-jsonschema-form-manager/FormManager";
+import { StaticConfigResolver } from "react-jsonschema-form-manager/ConfigResolver";
+
+let config = {
+  schema: {
+    type: "object",
+    required: ["firstName", "lastName"],
+    properties: {
+      firstName: {
+        type: "string",
+        title: "First name",
+      },
+      lastName: {
+        type: "string",
+        title: "Last name",
+      }
+    }
+  }
+};
+
+let configResolver = new StaticConfigResolver(config);
+let manager = new LocalStorageFormManager()
+
+let FormToDisplay = withManager(Form);
+
+ReactDOM.render(<FormToDisplay configResolver={configResolver} manager={manager} />, document.getElementById("app"));
+```
+
+## Update
+
 
