@@ -37,7 +37,18 @@ export default function withManager(
     }
 
     componentDidMount() {
-      this.resolveConfig(this.props.configResolver);
+      let { updateStrategy, manager, configResolver } = this.props;
+      if (updateStrategy) {
+        updateStrategy.start(manager);
+      }
+      this.resolveConfig(configResolver);
+    }
+
+    componentUnMount() {
+      let { updateStrategy } = this.props;
+      if (updateStrategy) {
+        updateStrategy.stop();
+      }
     }
 
     resolveConfig = configResolver => {
@@ -53,10 +64,24 @@ export default function withManager(
         });
     };
 
+    onChange = state => {
+      let { onChange, updateStrategy } = this.props;
+      if (updateStrategy) {
+        updateStrategy.onChange(state.formData);
+      }
+      if (onChange) {
+        onChange(state);
+      }
+    };
+
     onSubmit = state => {
-      let submit = this.props.manager.submit(state.formData);
-      if (this.props.onSubmit) {
-        submit.then(() => this.props.onSubmit(state));
+      let { onSubmit, manager, updateStrategy } = this.props;
+      let submit = manager.submit(state.formData);
+      if (onSubmit) {
+        submit.then(() => onSubmit(state));
+      }
+      if (updateStrategy) {
+        submit.then(() => updateStrategy.stop());
       }
     };
 
@@ -67,15 +92,30 @@ export default function withManager(
         return <ErrorScreen error={this.state.error} />;
       } else {
         let configs = Object.assign({}, this.props, this.state.config);
-        return <FormComponent {...configs} onSubmit={this.onSubmit} />;
+        return (
+          <FormComponent
+            {...configs}
+            onSubmit={this.onSubmit}
+            onChange={this.onChange}
+          />
+        );
       }
     }
   }
 
   FormWithManager.propTypes = {
-    updateStrategy: PropTypes.object,
-    configResolver: PropTypes.object.isRequired,
-    manager: PropTypes.object.isRequired,
+    updateStrategy: PropTypes.shape({
+      start: PropTypes.func.isRequired,
+      stop: PropTypes.func.isRequired,
+      onChange: PropTypes.func.isRequired,
+    }),
+    configResolver: PropTypes.shape({
+      resolve: PropTypes.func.isRequired,
+    }),
+    manager: PropTypes.shape({
+      submit: PropTypes.func.isRequired,
+      update: PropTypes.func.isRequired,
+    }),
   };
 
   return FormWithManager;

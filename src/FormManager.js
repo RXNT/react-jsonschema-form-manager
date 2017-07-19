@@ -13,6 +13,12 @@ export class LocalStorageFormManager extends FormManager {
       resolve(formData);
     });
   };
+  update = formData => {
+    return new Promise(resolve => {
+      localStorage.setItem(this.key, JSON.stringify(formData));
+      resolve(formData);
+    });
+  };
 }
 
 export class RESTFormManager extends FormManager {
@@ -32,6 +38,19 @@ export class RESTFormManager extends FormManager {
   submit = formData => {
     let req = new Request(this.url, {
       method: "POST",
+      body: JSON.stringify(formData),
+    });
+    if (this.credentials === undefined || this.credentials === null) {
+      return fetch(req).then(res => res.json());
+    } else if (typeof this.credentials === "object") {
+      return fetch(req, this.credentials).then(res => res.json());
+    } else {
+      return fetch(this.credentials(req)).then(res => res.json());
+    }
+  };
+  update = formData => {
+    let req = new Request(this.url, {
+      method: "PUT",
       body: JSON.stringify(formData),
     });
     if (this.credentials === undefined || this.credentials === null) {
