@@ -11,6 +11,10 @@ import {
   LocalStorageFormManager,
   RESTFormManager,
 } from "../../src/FormManager";
+import {
+  InstantUpdateStrategy,
+  IntervalUpdateStrategy,
+} from "../../src/UpdateStrategy";
 
 let config = {
   schema: {
@@ -92,6 +96,10 @@ let localStorageManager = new LocalStorageFormManager();
 let restManager = new RESTFormManager(`http://${host}/app/endpoint`);
 let allManagers = [localStorageManager, restManager];
 
+let instantUpdateStrategy = new InstantUpdateStrategy();
+let intervalUpdateStrategy = new IntervalUpdateStrategy(5000);
+let allUpdateStrategies = [instantUpdateStrategy, intervalUpdateStrategy];
+
 let FormToDisplay = withManager(playground(Form));
 
 export default class ResultForm extends Component {
@@ -100,6 +108,7 @@ export default class ResultForm extends Component {
       <FormToDisplay
         configResolver={allResolvers[2]}
         manager={allManagers[1]}
+        updateStrategy={allUpdateStrategies[1]}
       />
     );
   }

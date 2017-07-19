@@ -1,4 +1,12 @@
-export class UpdateStrategy {
+export class InstantUpdateStrategy {
+  onChange = formData => {
+    return this.manager.update(formData);
+  };
+  start = manager => (this.manager = manager);
+  stop = () => (this.manager = undefined);
+}
+
+export class IntervalUpdateStrategy {
   constructor(period) {
     this.period = period;
     this.formData = {};
