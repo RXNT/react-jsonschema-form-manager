@@ -109,6 +109,7 @@ class CustomErrorScreen extends Component {
       </div>
     );
   }
+}
 
 export default withManager(Form, CustomLoadingScreen, CustomErrorScreen);
 ```
