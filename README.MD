@@ -89,7 +89,7 @@ class CustomLoadingScreen extends Component {
   render() {
     return (
       <div className="container">
-        <h1>Look at me I'm loading</h1>
+        <h1>About to launch</h1>
       </div>
     );
   }
@@ -113,12 +113,12 @@ export default withManager(Form, CustomLoadingScreen, CustomErrorScreen);
 
 ## Configuration
 
+You specify configuration as one of the `props` for the rendered object, 
 
+### Static configuration
 
-### Static configuration load
+### REST configuration
 
-### REST configuration load
-
-### Custom configuration load
+### Custom configuration
 
 
