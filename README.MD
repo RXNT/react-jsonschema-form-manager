@@ -33,10 +33,7 @@ this an be done like this:
 import React from "react";
 import ReactDOM from "react-dom";
 import Form from "react-jsonschema-form";
-import withManager from "react-jsonschema-form-manager";
-import { LocalStorageFormManager } from "react-jsonschema-form-manager/FormManager";
-import { StaticConfigResolver } from "react-jsonschema-form-manager/ConfigResolver";
-import { IntervalUpdateStrategy } from 'react-jsonschema-form-manager/UpdateStrategy'
+import withManager, { LocalStorageFormManager, StaticConfigResolver, IntervalUpdateStrategy } from "react-jsonschema-form-manager";
 
 let config = {
   schema: {

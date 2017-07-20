@@ -1,25 +1,27 @@
 export class InstantUpdateStrategy {
-  onChange = formData => {
-    return this.manager.update(formData);
+  onChange = (formData, manager) => {
+    let update = manager.update(formData);
+    return update;
   };
-  start = manager => (this.manager = manager);
-  stop = () => (this.manager = undefined);
+  stop = () => {};
 }
 
 export class IntervalUpdateStrategy {
   constructor(period) {
     this.period = period;
-    this.formData = {};
   }
-  onChange = formData => {
-    this.formData = formData;
-    return Promise.resolve(this.formData);
+  update = () => {
+    if (this.manager && this.formData) {
+      this.manager.update(this.formData);
+    }
   };
-  start = manager => {
-    this.interval = setInterval(
-      () => manager.update(this.formData),
-      this.period
-    );
+  onChange = (formData, manager) => {
+    if (this.interval === undefined) {
+      this.interval = setInterval(this.update, this.period);
+    }
+    this.formData = formData;
+    this.manager = manager;
+    return Promise.resolve(this.formData);
   };
   stop = () => {
     clearInterval(this.interval);

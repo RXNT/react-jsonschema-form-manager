@@ -37,14 +37,11 @@ export default function withManager(
     }
 
     componentDidMount() {
-      let { updateStrategy, manager, configResolver } = this.props;
-      if (updateStrategy) {
-        updateStrategy.start(manager);
-      }
+      let { configResolver } = this.props;
       this.resolveConfig(configResolver);
     }
 
-    componentUnMount() {
+    componentWillUnmount() {
       let { updateStrategy } = this.props;
       if (updateStrategy) {
         updateStrategy.stop();
@@ -65,9 +62,9 @@ export default function withManager(
     };
 
     onChange = state => {
-      let { onChange, updateStrategy } = this.props;
+      let { onChange, manager, updateStrategy } = this.props;
       if (updateStrategy) {
-        updateStrategy.onChange(state.formData);
+        updateStrategy.onChange(state.formData, manager);
       }
       if (onChange) {
         onChange(state);
@@ -105,7 +102,6 @@ export default function withManager(
 
   FormWithManager.propTypes = {
     updateStrategy: PropTypes.shape({
-      start: PropTypes.func.isRequired,
       stop: PropTypes.func.isRequired,
       onChange: PropTypes.func.isRequired,
     }),
