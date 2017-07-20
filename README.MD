@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/RxNT/react-jsonschema-form-manager.svg?branch=master)](https://travis-ci.org/RxNT/react-jsonschema-form-manager)
 [![Coverage Status](https://coveralls.io/repos/github/RxNT/react-jsonschema-form-manager/badge.svg?branch=master)](https://coveralls.io/github/RxNT/react-jsonschema-form-manager?branch=master)
-
+[![npm version](https://badge.fury.io/js/react-jsonschema-form-manager.svg)](https://badge.fury.io/js/react-jsonschema-form-manager)
 
 # react-jsonschema-form-manager
 --------
