@@ -31,33 +31,21 @@ export class RESTConfigResolver extends ConfigResolver {
     }
   }
 
+  processResponse = res => {
+    if (res.status != 200) {
+      return res.json().then(error => Promise.reject(new Error(error)));
+    }
+    return res.json();
+  };
+
   resolve = () => {
     if (this.credentials === undefined || this.credentials === null) {
-      return fetch(this.url).then(res => res.json());
+      return fetch(this.url).then(this.processResponse);
     } else if (typeof this.credentials === "object") {
-      return fetch(this.url, this.credentials).then(res => res.json());
+      return fetch(this.url, this.credentials).then(this.processResponse);
     } else {
       let req = new Request(this.url);
-      return fetch(this.credentials(req)).then(res => res.json());
+      return fetch(this.credentials(req)).then(this.processResponse);
     }
-  };
-}
-
-export class GraphQLConfigResolver extends ConfigResolver {
-  constructor(url, credentials) {
-    super();
-    this.restResolver = new RESTConfigResolver(url, credentials);
-  }
-
-  resolve = () => {
-    return this.restResolver.resolve().then(({ data, error }) => {
-      return new Promise((resolve, reject) => {
-        if (error) {
-          reject(new Error(error));
-        } else {
-          resolve(data);
-        }
-      });
-    });
   };
 }

@@ -5,16 +5,16 @@
 # react-jsonschema-form-manager
 --------
 
-This project is opinionated implementation of a manager for [react-jsonschema-form](https://github.com/mozilla-services/react-jsonschema-form) 
+This project is opinionated implementation of a manager for [mozilla form](https://github.com/mozilla-services/react-jsonschema-form) 
 or any of it's derivative projects, it provides a REST based api layer that 
-handles form submit and update.
+handles form submission and update.
 
 ## Features
 
 - Saving [react-jsonschema-form](https://github.com/mozilla-services/react-jsonschema-form) related json with configurable `REST` or `LocalStorage` api for testing
 - Configurable form updates on data change, with `PUT` requests
 - Static and `REST` form configuration support
-- Configurable authentication support
+- Flexible authentication management
 
 ## Installation
 
@@ -27,7 +27,7 @@ npm install --s react-jsonschema-form-manager
 ## Usage
 
 The simplest use case would be to load static properties and save them in `localStorage`,
-this an be done like this:
+this can be done like this:
 
 ```js
 import React from "react";
@@ -53,7 +53,7 @@ let config = {
 };
 
 let configResolver = new StaticConfigResolver(config);
-let manager = new LocalStorageFormManager()
+let manager = new LocalStorageFormManager();
 let updateStrategy = new IntervalUpdateStrategy();
 
 let FormToDisplay = withManager(Form);
@@ -113,12 +113,185 @@ export default withManager(Form, CustomLoadingScreen, CustomErrorScreen);
 
 ## Configuration
 
-You specify configuration as one of the `props` for the rendered object, 
+Each mozilla form needs a configuration, which can be either pre configured or loaded from the server.
+`LoadingScreen` will be displayed while configuration loads. `ConfigResolver` does not make any assumptions regarding the content
+ of the configuration, so except for `schema` and `uiSchema` you can return any configuration needed.
+
+
+The simplest configuration for schema configuration load, would look like this:
+```js
+import React, { Component } from "react";
+import Form from "react-jsonschema-form";
+import withManager, { StaticConfigResolver, LocalStorageFormManager }  from "react-jsonschema-form-manager";
+
+let config = {
+  schema: {
+    //...
+  },
+  uiSchema: {
+    //...
+  },
+  formData: {
+    //...
+  },
+};
+
+let configResolver = new StaticConfigResolver(config);
+
+let localStorageManager = new LocalStorageFormManager();
+
+let FormToDisplay = withManager(Form);
+
+class ResultForm extends Component {
+  render() {
+    return (
+      <FormToDisplay
+        configResolver={configResolver}
+        manager={localStorageManager}
+      />
+    );
+  }
+}
+``` 
+
+Here the `config` will be used as Form configuration and `StaticConfigResolver` is used to return it.
+This is enough for forms to operate properly
+   
+There are 2 supported configuration resolvers:
+- Static configuration resolver, which uses pre configured `config` setting
+- REST configuration resolver, which talks to API endpoint for needed `configuration`
+
+You can also specify your own configuration resolver.
 
 ### Static configuration
 
+`StaticConfigResolver` takes 2 parameters `config` and `timeout`, 
+- `config` is the configuration to return 
+- `timeout` delay before returning configuration, it was added primarily for testing purposes
+
+```js
+import { StaticConfigResolver }  from "react-jsonschema-form-manager";
+let timeout = 10000;
+
+let config = {
+  schema: {
+    //...
+  },
+  uiSchema: {
+    //...
+  },
+  formData: {
+    //...
+  },
+};
+
+let configResolver = new StaticConfigResolver(config, timeout);
+```
+
 ### REST configuration
 
+Primary configuration option is by means of `REST` API, which you can configure with needed authentication
+ 
+`RESTConfigResolver` takes 2 parameters as well original 
+- `url` configuration url to use
+- `credentials` authentication to use with url
+
+The simplest `RESTConfigResolver` will look like this:
+
+```js
+import { RESTConfigResolver }  from "react-jsonschema-form-manager";
+
+let configResolver = new RESTConfigResolver(`https://example.com/schema`);
+```
+In this case no authentication is needed and config resolver returnes json result of `REST` request
+
+#### Authentication configuration
+
+There are 3 options to specify `credentials` for the configuration endpoint
+
+
+##### Leave it empty
+ 
+In this case no authentication will be provided for the request
+
+```js
+import { RESTConfigResolver }  from "react-jsonschema-form-manager";
+
+let configResolver = new RESTConfigResolver(`https://example.com/schema`);
+```
+
+##### Specify credentials object
+
+In case authentication can be done with domain Cookies, you can simply specify credentials object in accordance with fetch documentation.
+Refer to [whatwg-fetch sending cookies](https://www.npmjs.com/package/whatwg-fetch#sending-cookies) documentation for more details.
+
+
+```js
+import { RESTConfigResolver }  from "react-jsonschema-form-manager";
+
+let configResolver = new RESTConfigResolver(
+  `https://example.com/schema`, 
+  {
+    credentials: 'same-origin'
+  });
+```
+
+or
+
+```js
+import { RESTConfigResolver }  from "react-jsonschema-form-manager";
+
+let configResolver = new RESTConfigResolver(
+  `https://example.com/schema`, 
+  {
+    credentials: 'include'
+  });
+```
+
+##### Use transformation function for the Request
+
+Transformation function, would sign fetch `Request` with any custom authentication logic needed.
+
+For example to have a `Basic authentication` can be done like this:
+
+```js
+import { RESTConfigResolver }  from "react-jsonschema-form-manager";
+
+let credentials = (req) => new Request(req, { headers: {
+  'Authorization': 'Basic '+ btoa(`${username}:${password}`),
+}});
+
+let configResolver = new RESTConfigResolver(
+  `https://example.com/schema`, 
+  credentials);
+```
+
 ### Custom configuration
+
+If neither `REST` or `Static` configuration fits your needs, you can create your own configuration, by simply providing 
+`resolve` method with no params, that would return `Promise` with `config` result
+
+For example GraphQL ConfigResolver can be defined something like this:
+
+```js
+import { RESTConfigResolver }  from "react-jsonschema-form-manager";
+
+class GraphQLConfigResolver {
+  constructor(url, credentials) {
+    this.restResolver = new RESTConfigResolver(url, credentials);
+  }
+  resolve = () => {
+    return this.restResolver.resolve().then(({ data, error }) => {
+      return new Promise((resolve, reject) => {
+        if (error) {
+          reject(new Error(error));
+        } else {
+          resolve(data);
+        }
+      });
+    });
+  };
+}
+```
 
 
