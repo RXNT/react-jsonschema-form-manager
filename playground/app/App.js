@@ -5,7 +5,6 @@ import playground from "react-jsonschema-form-playground";
 import {
   StaticConfigResolver,
   RESTConfigResolver,
-  GraphQLConfigResolver,
 } from "../../src/ConfigResolver";
 import {
   LocalStorageFormManager,
@@ -86,11 +85,8 @@ let staticResolver = new StaticConfigResolver(config, 1000);
 let restResolver = new RESTConfigResolver(
   `http://${host}/app/config/simple.json`
 );
-let graphQLResolver = new GraphQLConfigResolver(
-  `http://${host}/app/config/graphQL.json`
-);
 
-let allResolvers = [staticResolver, restResolver, graphQLResolver];
+let allResolvers = [staticResolver, restResolver];
 
 let localStorageManager = new LocalStorageFormManager();
 let restManager = new RESTFormManager(`http://${host}/app/endpoint`);
@@ -106,7 +102,7 @@ export default class ResultForm extends Component {
   render() {
     return (
       <FormToDisplay
-        configResolver={allResolvers[2]}
+        configResolver={allResolvers[0]}
         manager={allManagers[1]}
         updateStrategy={allUpdateStrategies[1]}
       />
