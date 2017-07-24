@@ -192,7 +192,7 @@ let configResolver = new StaticConfigResolver(config, timeout);
 
 Primary configuration option is by means of `REST` API, which you can configure with needed authentication
  
-`RESTConfigResolver` takes 2 parameters as well original 
+`RESTConfigResolver` takes 2 parameters  
 - `url` configuration url to use
 - `credentials` authentication to use with url
 
@@ -208,7 +208,6 @@ In this case no authentication is needed and config resolver returnes json resul
 #### Authentication configuration
 
 There are 3 options to specify `credentials` for the configuration endpoint
-
 
 ##### Leave it empty
  
@@ -293,5 +292,89 @@ class GraphQLConfigResolver {
   };
 }
 ```
+
+## Saving formData
+
+Besides schema configuration, you need to specify the way to save formData. System supports 2 ways of saving data
+- `LocalStorage` - using LocalStorage for storing submitted data, this is primarily for testing purpose
+- `REST` - saving data in REST endpoint
+  
+The simplest configuration can look like this
+
+```js
+import React, { Component } from "react";
+import Form from "react-jsonschema-form";
+import withManager, { StaticConfigResolver, LocalStorageFormManager }  from "react-jsonschema-form-manager";
+
+let config = { 
+  //...
+};
+
+let configResolver = new StaticConfigResolver(config);
+
+let localStorageManager = new LocalStorageFormManager();
+
+let FormToDisplay = withManager(Form);
+
+class ResultForm extends Component {
+  render() {
+    return (
+      <FormToDisplay
+        configResolver={configResolver}
+        manager={localStorageManager}
+        onSubmit={() => onSuccessCallback}
+      />
+    );
+  }
+}
+```
+
+In this case data is stored in `LocalStorage` and on successful submit, if there are no errors `onSuccessCallback` is called for further processing.
+
+### Local storage
+
+`LocalStorage` store is there only for testing purposes and not supposed to be used in production.  
+You can specify a `key` under which provided form will be stored. By default `form` is used as a key and you are limited to single form.
+
+### REST storage
+
+As with schema configuration, this is primary option for storing your data.
+ 
+`RESTFormManager` takes 2 parameters 
+- `url` configuration url to use
+- `credentials` authentication to use with url
+
+Authentication logic is the same as for `RESTConfigurationResolver`, the only difference is that instead of the `GET`, we send a `POST` 
+with `JSON` of `formData` as a request.
+  
+### Custom storage
+
+As with `ConfigurationResolver` you can create your custom implementation for `FormManager`, which needs only 2 methods
+`submit` and `update`, both of which should return `Promise` with saved data.
+
+For example `FormManager` using `SessionStorage` can look something like this:
+```js
+class SessionStorageFormManager {
+  constructor(key = DEFAULT_KEY) {
+    this.key = key;
+  }
+  submit = formData => {
+    return new Promise(resolve => {
+      sessionStorage.setItem(this.key, JSON.stringify(formData));
+      resolve(formData);
+    });
+  };
+  update = formData => {
+    return new Promise(resolve => {
+      sessionStorage.setItem(this.key, JSON.stringify(formData));
+      resolve(formData);
+    });
+  }
+}
+```
+
+
+
+
 
 
