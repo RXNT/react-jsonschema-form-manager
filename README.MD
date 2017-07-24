@@ -54,7 +54,7 @@ let config = {
 
 let configResolver = new StaticConfigResolver(config);
 let manager = new LocalStorageFormManager();
-let updateStrategy = new IntervalUpdateStrategy();
+let updateStrategy = new IntervalUpdateStrategy(10000);
 
 let FormToDisplay = withManager(Form);
 
@@ -330,6 +330,7 @@ class ResultForm extends Component {
 ```
 
 In this case data is stored in `LocalStorage` and on successful submit, if there are no errors `onSuccessCallback` is called for further processing.
+Implementation wraps `onSubmit` on original form and calls it only after formData was successfully saved with underlying `FormManager`.
 
 ### Local storage
 
@@ -373,6 +374,106 @@ class SessionStorageFormManager {
 }
 ```
 
+You can skip logic in `update`, if you are not planning to use any `UpdateStrategy` in your case. 
+
+## Update Strategy
+
+`UpdateStrategy` is needed in case you want to save transient results of work.
+
+For example
+```js
+import React, { Component } from "react";
+import Form from "react-jsonschema-form";
+import { InstantUpdateStrategy }  from "react-jsonschema-form-manager";
+
+let updateStrategy = new InstantUpdateStrategy();
+
+let FormToDisplay = withManager(Form);
+
+class ResultForm extends Component {
+  render() {
+    return (
+      <FormToDisplay
+        updateStrategy={updateStrategy}
+      />
+    );
+  }
+}
+```
+In this case all changes to the `formData`, will be instantly submitted by the `FormManager` to the underlying server. 
+
+As with FormManager, UpdateStrategy override embedded `onChange` mozilla-jsonschema functionality. 
+
+There are 2 kinds of `UpdateStrategy` currently supported
+
+### Instant update
+
+`InstantUpdateStrategy` updates request on every change of the form. This is a lot of work for the server and not recommended.
+
+```js
+import React, { Component } from "react";
+import Form from "react-jsonschema-form";
+import { InstantUpdateStrategy }  from "react-jsonschema-form-manager";
+
+let updateStrategy = new InstantUpdateStrategy();
+
+let FormToDisplay = withManager(Form);
+
+class ResultForm extends Component {
+  render() {
+    return (
+      <FormToDisplay
+        updateStrategy={updateStrategy}
+        onChange={() => onSuccessChange}
+      />
+    );
+  }
+}
+```
+### Interval updates
+
+`IntervalUpdateStrategy` updates request in specified interval of time, it takes `timeout` as parameter.
+
+For example, in order to update server every 100 seconds configuration would look something like this:
+```js
+import React, { Component } from "react";
+import Form from "react-jsonschema-form";
+import { IntervalUpdateStrategy }  from "react-jsonschema-form-manager";
+
+let updateStrategy = new IntervalUpdateStrategy(100000);
+
+let FormToDisplay = withManager(Form);
+
+class ResultForm extends Component {
+  render() {
+    return (
+      <FormToDisplay
+        updateStrategy={updateStrategy}
+        onChange={() => onSuccessChange}
+      />
+    );
+  }
+}
+```
+
+### Custom update strategy
+
+As with other components you can easily override UpdateStrategy with custom implementation, that needs 2 methods `onChange` and `stop`.
+- `stop` get called when component unMounts, or after successful submit
+- `onChange` called when ever `formData` changes
+
+## Contribute
+
+- Issue Tracker: github.com/RxNT/react-jsonschema-form-manager/issues
+- Source Code: github.com/RxNT/react-jsonschema-form-manager
+
+## Support
+
+If you are having issues, please let us know here or on StackOverflow.
+
+## License
+
+The project is licensed under the Apache Licence 2.0.
 
 
 
