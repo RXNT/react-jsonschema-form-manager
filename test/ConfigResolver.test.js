@@ -1,4 +1,5 @@
-import { StaticConfigResolver } from "../src/ConfigResolver";
+import { RESTConfigResolver, StaticConfigResolver } from "../src";
+import fetchMock from "fetch-mock";
 
 let conf = {
   schema: {
@@ -65,9 +66,16 @@ let conf = {
   },
 };
 
-let configResolver = new StaticConfigResolver(conf);
+test("Static resolver", () => {
+  let configResolver = new StaticConfigResolver(conf);
+  return configResolver
+    .resolve()
+    .then(readConf => expect(readConf).toEqual(conf));
+});
 
-test("Simple resolve", () => {
+test("REST resolver", () => {
+  fetchMock.once("https://example.com/schema", JSON.stringify(conf));
+  let configResolver = new RESTConfigResolver("https://example.com/schema");
   return configResolver
     .resolve()
     .then(readConf => expect(readConf).toEqual(conf));

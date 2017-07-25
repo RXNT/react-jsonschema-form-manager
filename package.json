@@ -76,6 +76,7 @@
     "exit-hook": "^1.1.1",
     "express": "^4.15.3",
     "extract-text-webpack-plugin": "^3.0.0",
+    "fetch-mock": "^5.12.1",
     "gh-pages": "^1.0.0",
     "has-flag": "^2.0.0",
     "html": "1.0.0",
