@@ -56,13 +56,9 @@ let configResolver = new StaticConfigResolver(config);
 let manager = new LocalStorageFormManager();
 let updateStrategy = new IntervalUpdateStrategy(10000);
 
-let FormToDisplay = withManager(Form);
+let FormToDisplay = withManager(manager, configResolver, updateStrategy)(Form);
 
-ReactDOM.render(<FormToDisplay 
-  configResolver={configResolver} 
-  manager={manager}
-  updateStrategy={updateStrategy}
-  />, document.getElementById("app"));
+ReactDOM.render(<FormToDisplay />, document.getElementById("app"));
 ```
 
 Functional part of API consist of 3 parts
@@ -108,7 +104,9 @@ class CustomErrorScreen extends Component {
   }
 }
 
-export default withManager(Form, CustomLoadingScreen, CustomErrorScreen);
+...
+
+export default withManager(manager, configResolver)(Form, CustomLoadingScreen, CustomErrorScreen);
 ```
 
 ## Configuration
@@ -137,18 +135,14 @@ let config = {
 };
 
 let configResolver = new StaticConfigResolver(config);
-
 let localStorageManager = new LocalStorageFormManager();
 
-let FormToDisplay = withManager(Form);
+let FormToDisplay = withManager(configResolver, localStorageManager)(Form);
 
 class ResultForm extends Component {
   render() {
     return (
-      <FormToDisplay
-        configResolver={configResolver}
-        manager={localStorageManager}
-      />
+      <FormToDisplay />
     );
   }
 }
@@ -311,19 +305,14 @@ let config = {
 };
 
 let configResolver = new StaticConfigResolver(config);
-
 let localStorageManager = new LocalStorageFormManager();
 
-let FormToDisplay = withManager(Form);
+let FormToDisplay = withManager(configResolver, localStorageManager)(Form);
 
 class ResultForm extends Component {
   render() {
     return (
-      <FormToDisplay
-        configResolver={configResolver}
-        manager={localStorageManager}
-        onSubmit={() => onSuccessCallback}
-      />
+      <FormToDisplay onSubmit={() => onSuccessCallback}/>
     );
   }
 }
@@ -386,16 +375,16 @@ import React, { Component } from "react";
 import Form from "react-jsonschema-form";
 import { InstantUpdateStrategy }  from "react-jsonschema-form-manager";
 
+...
+
 let updateStrategy = new InstantUpdateStrategy();
 
-let FormToDisplay = withManager(Form);
+let FormToDisplay = withManager(configResolver, manager, updateStrategy)(Form);
 
 class ResultForm extends Component {
   render() {
     return (
-      <FormToDisplay
-        updateStrategy={updateStrategy}
-      />
+      <FormToDisplay/>
     );
   }
 }
@@ -417,15 +406,12 @@ import { InstantUpdateStrategy }  from "react-jsonschema-form-manager";
 
 let updateStrategy = new InstantUpdateStrategy();
 
-let FormToDisplay = withManager(Form);
+let FormToDisplay = withManager(configResolver, manager, updateStrategy)(Form);
 
 class ResultForm extends Component {
   render() {
     return (
-      <FormToDisplay
-        updateStrategy={updateStrategy}
-        onChange={() => onSuccessChange}
-      />
+      <FormToDisplay onChange={() => onSuccessChange}/>
     );
   }
 }
@@ -442,15 +428,12 @@ import { IntervalUpdateStrategy }  from "react-jsonschema-form-manager";
 
 let updateStrategy = new IntervalUpdateStrategy(100000);
 
-let FormToDisplay = withManager(Form);
+let FormToDisplay = withManager(configResolver, manager, updateStrategy)(Form);
 
 class ResultForm extends Component {
   render() {
     return (
-      <FormToDisplay
-        updateStrategy={updateStrategy}
-        onChange={() => onSuccessChange}
-      />
+      <FormToDisplay onChange={() => onSuccessChange}/>
     );
   }
 }
@@ -460,7 +443,20 @@ class ResultForm extends Component {
 
 As with other components you can easily override UpdateStrategy with custom implementation, that needs 2 methods `onChange` and `stop`.
 - `stop` get called when component unMounts, or after successful submit
-- `onChange` called when ever `formData` changes
+- `onChange` called when ever `formData` changes with `handleUpdate`
+
+For example you want to update only on even dates, this would look something like this:
+```js
+export class EvenDaysUpdateStrategy {
+  constructor() {}
+  onChange = (formData, handleUpdate) => {
+    if (new Date().getDate() % 2 == 0) {
+      handleUpdate(formData);
+    }
+  };
+  stop = () => {};
+}
+```
 
 ## Contribute
 

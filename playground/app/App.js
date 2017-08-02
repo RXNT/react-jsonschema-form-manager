@@ -74,19 +74,37 @@ let config = {
 
 let staticResolver = new StaticConfigResolver(config, 100);
 let storageManager = new LocalStorageFormManager();
-let updateStrategy = new IntervalUpdateStrategy(1000);
+let updateStrategy = new IntervalUpdateStrategy(90000);
 
 let FormToDisplay = withManager(staticResolver, storageManager, updateStrategy)(
   playground(Form)
 );
 
+function LastUpdated({ lastUpdated }) {
+  return (
+    <div className="pull-right">
+      {lastUpdated.toString()}
+    </div>
+  );
+}
+
 export default class ResultForm extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { lastUpdated: new Date() };
+  }
+  setUpdated = () => {
+    this.setState({ lastUpdated: new Date() });
+  };
   render() {
     return (
-      <FormToDisplay
-        onChange={() => console.log("Here I am")}
-        onUpdate={() => console.log("Updated")}
-      />
+      <div>
+        <LastUpdated lastUpdated={this.state.lastUpdated} />
+        <FormToDisplay
+          onChange={() => console.log("Here I am")}
+          onUpdate={this.setUpdated}
+        />
+      </div>
     );
   }
 }
