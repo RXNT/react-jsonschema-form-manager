@@ -433,7 +433,7 @@ let FormToDisplay = withManager(configResolver, manager, updateStrategy)(Form);
 class ResultForm extends Component {
   render() {
     return (
-      <FormToDisplay onChange={() => onSuccessChange}/>
+      <FormToDisplay/>
     );
   }
 }
@@ -455,6 +455,25 @@ export class EvenDaysUpdateStrategy {
     }
   };
   stop = () => {};
+}
+```
+
+### Listening to updates
+
+If you want to track server data updates, you can do this by specifying `onUpdate` callback on rendered form
+
+
+```js
+...
+
+let FormToDisplay = withManager(configResolver, manager, updateStrategy)(Form);
+
+class ResultForm extends Component {
+  render() {
+    return (
+      <FormToDisplay onUpdate={() => console.log("Data updated")}/>
+    );
+  }
 }
 ```
 
