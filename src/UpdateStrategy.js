@@ -1,7 +1,18 @@
+export const IgnoreUpdateStrategy = {
+  subscribe: function() {},
+  onChange: function() {},
+  stop: function() {},
+};
+
 export class InstantUpdateStrategy {
-  onChange = (formData, manager) => {
-    let update = manager.update(formData);
-    return update;
+  constructor() {}
+  subscribe = updateCallback => {
+    this.onUpdate = updateCallback;
+  };
+  onChange = formData => {
+    if (this.onUpdate) {
+      this.onUpdate(formData);
+    }
   };
   stop = () => {};
 }
@@ -10,18 +21,17 @@ export class IntervalUpdateStrategy {
   constructor(period) {
     this.period = period;
   }
-  update = () => {
-    if (this.manager && this.formData) {
-      this.manager.update(this.formData);
-    }
+  subscribe = onUpdate => {
+    this.onUpdate = onUpdate;
   };
-  onChange = (formData, manager) => {
-    if (this.interval === undefined) {
-      this.interval = setInterval(this.update, this.period);
-    }
+  onChange = formData => {
     this.formData = formData;
-    this.manager = manager;
-    return Promise.resolve(this.formData);
+    if (this.interval === undefined && this.onUpdate) {
+      this.interval = setInterval(
+        () => this.onUpdate(this.formData),
+        this.period
+      );
+    }
   };
   stop = () => {
     clearInterval(this.interval);

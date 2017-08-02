@@ -1,19 +1,11 @@
 import React, { Component } from "react";
 import Form from "react-jsonschema-form";
-import withManager from "../../src";
 import playground from "react-jsonschema-form-playground";
-import {
+import withManager, {
   StaticConfigResolver,
-  RESTConfigResolver,
-} from "../../src/ConfigResolver";
-import {
   LocalStorageFormManager,
-  RESTFormManager,
-} from "../../src/FormManager";
-import {
-  InstantUpdateStrategy,
   IntervalUpdateStrategy,
-} from "../../src/UpdateStrategy";
+} from "../../src";
 
 let config = {
   schema: {
@@ -80,31 +72,20 @@ let config = {
   },
 };
 
-let host = window.location.host;
-let staticResolver = new StaticConfigResolver(config, 1000);
-let restResolver = new RESTConfigResolver(
-  `http://${host}/app/config/simple.json`
+let staticResolver = new StaticConfigResolver(config, 100);
+let storageManager = new LocalStorageFormManager();
+let updateStrategy = new IntervalUpdateStrategy(1000);
+
+let FormToDisplay = withManager(staticResolver, storageManager, updateStrategy)(
+  playground(Form)
 );
-
-let allResolvers = [staticResolver, restResolver];
-
-let localStorageManager = new LocalStorageFormManager();
-let restManager = new RESTFormManager(`http://${host}/app/endpoint`);
-let allManagers = [localStorageManager, restManager];
-
-let instantUpdateStrategy = new InstantUpdateStrategy();
-let intervalUpdateStrategy = new IntervalUpdateStrategy(5000);
-let allUpdateStrategies = [instantUpdateStrategy, intervalUpdateStrategy];
-
-let FormToDisplay = withManager(playground(Form));
 
 export default class ResultForm extends Component {
   render() {
     return (
       <FormToDisplay
-        configResolver={allResolvers[0]}
-        manager={allManagers[1]}
-        updateStrategy={allUpdateStrategies[1]}
+        onChange={() => console.log("Here I am")}
+        onUpdate={() => console.log("Updated")}
       />
     );
   }

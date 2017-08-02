@@ -73,6 +73,27 @@ test("Static resolver", () => {
     .then(readConf => expect(readConf).toEqual(conf));
 });
 
+test("REST config resolver construction", () => {
+  expect(
+    () => new RESTConfigResolver("https://example.com/schema", "some")
+  ).toThrow();
+  expect(
+    () => new RESTConfigResolver("https://example.com/schema", 12)
+  ).toThrow();
+  expect(
+    () => new RESTConfigResolver("https://example.com/schema", undefined)
+  ).not.toBeUndefined();
+  expect(
+    () => new RESTConfigResolver("https://example.com/schema", null)
+  ).not.toBeUndefined();
+  expect(
+    () => new RESTConfigResolver("https://example.com/schema", () => {})
+  ).not.toBeUndefined();
+  expect(
+    () => new RESTConfigResolver("https://example.com/schema", {})
+  ).not.toBeUndefined();
+});
+
 test("REST resolver", () => {
   fetchMock.once("https://example.com/schema", JSON.stringify(conf));
   let configResolver = new RESTConfigResolver("https://example.com/schema");

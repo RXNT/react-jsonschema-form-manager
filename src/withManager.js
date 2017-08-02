@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
+import { IgnoreUpdateStrategy } from "./UpdateStrategy";
 
 class DefaultLoadingScreen extends Component {
   render() {
@@ -24,95 +25,111 @@ class DefaultErrorScreen extends Component {
   }
 }
 
+let propTypes = {
+  updateStrategy: PropTypes.shape({
+    stop: PropTypes.func.isRequired,
+    subscribe: PropTypes.func.isRequired,
+    onChange: PropTypes.func.isRequired,
+  }),
+  configResolver: PropTypes.shape({
+    resolve: PropTypes.func.isRequired,
+  }),
+  manager: PropTypes.shape({
+    submit: PropTypes.func.isRequired,
+    update: PropTypes.func.isRequired,
+  }),
+};
+
 export default function withManager(
-  FormComponent,
-  LoadingScreen = DefaultLoadingScreen,
-  ErrorScreen = DefaultErrorScreen
+  configResolver,
+  manager,
+  updateStrategy = IgnoreUpdateStrategy
 ) {
-  class FormWithManager extends Component {
-    constructor(props) {
-      super(props);
+  PropTypes.checkPropTypes(
+    propTypes,
+    { manager, configResolver, updateStrategy },
+    "props",
+    "react-jsonschema-form-manager"
+  );
+  return (
+    FormComponent,
+    LoadingScreen = DefaultLoadingScreen,
+    ErrorScreen = DefaultErrorScreen
+  ) => {
+    class FormWithManager extends Component {
+      constructor(props) {
+        super(props);
 
-      this.state = { isLoading: true, isError: false };
-    }
+        this.state = { isLoading: true, isError: false };
+        this.listenToUpdateStrategy(this.props);
 
-    componentDidMount() {
-      let { configResolver } = this.props;
-      this.resolveConfig(configResolver);
-    }
+        configResolver
+          .resolve()
+          .then(config => {
+            this.setState({ isLoading: false, isEqual: false, config });
+          })
+          .catch(error => {
+            this.setState({ isLoading: false, isError: true, error });
+          });
+      }
 
-    componentWillUnmount() {
-      let { updateStrategy } = this.props;
-      if (updateStrategy) {
+      listenToUpdateStrategy({ onUpdate }) {
+        if (onUpdate) {
+          updateStrategy.subscribe(formData =>
+            manager.update(formData).then(saved => onUpdate(saved))
+          );
+        } else {
+          updateStrategy.subscribe(formData => manager.update(formData));
+        }
+      }
+
+      componentWillReceiveProps(nextProps) {
+        if (this.props.onUpdate != nextProps.onUpdate) {
+          this.listenToUpdateStrategy(nextProps);
+        }
+      }
+
+      componentWillUnmount() {
         updateStrategy.stop();
       }
-    }
 
-    resolveConfig = configResolver => {
-      this.setState({ isLoading: true, isError: false });
-      configResolver
-        .resolve()
-        .then(config => {
-          this.setState({ config });
-          this.setState({ isLoading: false, isEqual: false });
-        })
-        .catch(error => {
-          this.setState({ isLoading: false, isError: true, error });
-        });
-    };
+      onChange = state => {
+        let { onChange } = this.props;
+        updateStrategy.onChange(state.formData);
+        if (onChange) {
+          onChange(state);
+        }
+      };
 
-    onChange = state => {
-      let { onChange, manager, updateStrategy } = this.props;
-      if (updateStrategy) {
-        updateStrategy.onChange(state.formData, manager);
-      }
-      if (onChange) {
-        onChange(state);
-      }
-    };
+      onSubmit = state => {
+        let { onSubmit } = this.props;
+        let submit = manager
+          .submit(state.formData)
+          .then(() => updateStrategy.stop());
+        if (onSubmit) {
+          submit.then(() => onSubmit(state));
+        }
+      };
 
-    onSubmit = state => {
-      let { onSubmit, manager, updateStrategy } = this.props;
-      let submit = manager.submit(state.formData);
-      if (onSubmit) {
-        submit.then(() => onSubmit(state));
-      }
-      if (updateStrategy) {
-        submit.then(() => updateStrategy.stop());
-      }
-    };
-
-    render() {
-      if (this.state.isLoading) {
-        return <LoadingScreen />;
-      } else if (this.state.isError) {
-        return <ErrorScreen error={this.state.error} />;
-      } else {
-        let configs = Object.assign({}, this.props, this.state.config);
-        return (
-          <FormComponent
-            {...configs}
-            onSubmit={this.onSubmit}
-            onChange={this.onChange}
-          />
-        );
+      render() {
+        let { isLoading, isError, error, config } = this.state;
+        if (isLoading) {
+          return <LoadingScreen />;
+        } else if (isError) {
+          return <ErrorScreen error={error} />;
+        } else {
+          let configs = Object.assign({}, this.props, config);
+          return (
+            <FormComponent
+              {...configs}
+              onSubmit={this.onSubmit}
+              onChange={this.onChange}
+            />
+          );
+        }
       }
     }
-  }
 
-  FormWithManager.propTypes = {
-    updateStrategy: PropTypes.shape({
-      stop: PropTypes.func.isRequired,
-      onChange: PropTypes.func.isRequired,
-    }),
-    configResolver: PropTypes.shape({
-      resolve: PropTypes.func.isRequired,
-    }),
-    manager: PropTypes.shape({
-      submit: PropTypes.func.isRequired,
-      update: PropTypes.func.isRequired,
-    }),
+    return FormWithManager;
   };
-
-  return FormWithManager;
 }
