@@ -1,30 +1,23 @@
-export const IgnoreUpdateStrategy = {
-  onChange: function() {},
-  stop: function() {},
-};
-
-export class InstantUpdateStrategy {
-  constructor() {}
-  onChange = (formData, handleUpdate) => {
-    handleUpdate(formData);
+export function ignoreUpdateStrategy() {
+  return {
+    onChange: function() {},
+    stop: function() {},
   };
-  stop = () => {};
 }
 
-export class IntervalUpdateStrategy {
-  constructor(period) {
-    this.period = period;
-  }
-  onChange = (formData, handleUpdate) => {
-    this.formData = formData;
-    if (this.interval === undefined) {
-      this.interval = setInterval(
-        () => handleUpdate(this.formData),
-        this.period
-      );
-    }
+export function instantUpdateStrategy(manager) {
+  return {
+    onChange: () => manager.update(),
+    stop: function() {},
   };
-  stop = () => {
-    clearInterval(this.interval);
+}
+
+export function intervalUpdateStrategy(period) {
+  return manager => {
+    let interval = setInterval(() => manager.update(), period);
+    return {
+      onChange: () => {},
+      stop: () => clearInterval(interval),
+    };
   };
 }

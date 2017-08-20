@@ -1,3 +1,6 @@
+import rfc6902 from "rfc6902";
+import deepEqual from "deep-equal";
+import { doFetch, checkCredentials } from "./utils";
 class FormManager {}
 
 const DEFAULT_KEY = "form";
@@ -7,58 +10,77 @@ export class LocalStorageFormManager extends FormManager {
     super();
     this.key = key;
   }
-  submit = formData => {
-    return new Promise(resolve => {
-      localStorage.setItem(this.key, JSON.stringify(formData));
-      resolve(formData);
-    });
+  doUpdate = () => {
+    let formData = this.formData;
+    localStorage.setItem(this.key, JSON.stringify(formData));
+    return Promise.resolve(formData);
   };
-  update = formData => {
-    return new Promise(resolve => {
-      localStorage.setItem(this.key, JSON.stringify(formData));
-      resolve(formData);
-    });
+  submit = formData => {
+    this.formData = formData ? formData : this.formData;
+    return this.doUpdate();
+  };
+
+  onChange = ({ formData }) => {
+    this.formData = formData;
+  };
+  update = () => {
+    return this.doUpdate();
   };
 }
 
 export class RESTFormManager extends FormManager {
-  constructor(url, credentials) {
+  constructor(url, credentials, patch = false) {
     super();
     this.url = url;
+    this.patch = patch;
     this.credentials = credentials;
-    if (
-      credentials !== undefined &&
-      credentials !== null &&
-      typeof this.credentials !== "object" &&
-      typeof this.credentials !== "function"
-    ) {
-      throw new Error("Credentials can be object or function(req)");
-    }
+
+    this.formData = {};
+    this.savedFormData = {};
+
+    checkCredentials(credentials);
   }
-  submit = formData => {
-    let req = new Request(this.url, {
+
+  toSubmitRequest = formData => {
+    return new Request(this.url, {
       method: "POST",
       body: JSON.stringify(formData),
     });
-    if (this.credentials === undefined || this.credentials === null) {
-      return fetch(req).then(res => res.json());
-    } else if (typeof this.credentials === "object") {
-      return fetch(req, this.credentials).then(res => res.json());
+  };
+  submit = formData => {
+    let submitData = formData ? formData : this.formData;
+    let req = this.toSubmitRequest(submitData);
+
+    this.formData = submitData;
+    this.savedFormData = submitData;
+
+    return doFetch(req, this.credentials);
+  };
+
+  onChange = ({ formData }) => {
+    this.formData = formData;
+  };
+
+  toUpdateRequest = () => {
+    if (this.patch) {
+      return new Request(this.url, {
+        method: "PATCH",
+        body: rfc6902.createPatch(this.savedFormData, this.formData),
+      });
     } else {
-      return fetch(this.credentials(req)).then(res => res.json());
+      return new Request(this.url, {
+        method: "PUT",
+        body: JSON.stringify(this.formData),
+      });
     }
   };
-  update = formData => {
-    let req = new Request(this.url, {
-      method: "PUT",
-      body: JSON.stringify(formData),
-    });
-    if (this.credentials === undefined || this.credentials === null) {
-      return fetch(req).then(res => res.json());
-    } else if (typeof this.credentials === "object") {
-      return fetch(req, this.credentials).then(res => res.json());
-    } else {
-      return fetch(this.credentials(req)).then(res => res.json());
+  update = () => {
+    if (deepEqual(this.formData, this.savedFormData)) {
+      return Promise.resolve(this.formData);
     }
+    this.savedFormData = this.formData;
+
+    let req = this.toUpdateRequest();
+    return doFetch(req, this.credentials);
   };
 }

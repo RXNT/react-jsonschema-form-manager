@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
-import { IgnoreUpdateStrategy } from "./UpdateStrategy";
+import { ignoreUpdateStrategy } from "./UpdateStrategy";
 
 class DefaultLoadingScreen extends Component {
   render() {
@@ -26,30 +26,41 @@ class DefaultErrorScreen extends Component {
 }
 
 let propTypes = {
-  updateStrategy: PropTypes.shape({
-    stop: PropTypes.func.isRequired,
-    onChange: PropTypes.func.isRequired,
-  }),
   configResolver: PropTypes.shape({
     resolve: PropTypes.func.isRequired,
-  }),
+  }).isRequired,
   manager: PropTypes.shape({
+    onChange: PropTypes.func.isRequired,
     submit: PropTypes.func.isRequired,
     update: PropTypes.func.isRequired,
-  }),
+  }).isRequired,
+  updateStrategy: PropTypes.shape({
+    onChange: PropTypes.func.isRequired,
+    stop: PropTypes.func.isRequired,
+  }).isRequired,
 };
 
 export default function withManager(
   configResolver,
   manager,
-  updateStrategy = IgnoreUpdateStrategy
+  updateStrategy = ignoreUpdateStrategy
 ) {
+  updateStrategy = updateStrategy(manager);
+
   PropTypes.checkPropTypes(
     propTypes,
     { manager, configResolver, updateStrategy },
     "props",
     "react-jsonschema-form-manager"
   );
+
+  const origUpdate = manager.update;
+  manager.update = () => {
+    let upd = origUpdate();
+    upd.then(formData => manager.onUpdate(formData));
+    return upd;
+  };
+
   return (
     FormComponent,
     LoadingScreen = DefaultLoadingScreen,
@@ -60,6 +71,7 @@ export default function withManager(
         super(props);
 
         this.state = { isLoading: true, isError: false };
+        manager.onUpdate = this.handleUpdate;
 
         configResolver
           .resolve()
@@ -77,36 +89,32 @@ export default function withManager(
       }
 
       componentWillUnmount() {
-        updateStrategy.stop();
+        manager.stop();
       }
 
-      handleUpdate = formData => {
-        let updateManager = manager.update(formData);
-        if (this.props.onUpdate) {
-          updateManager.then(formData => this.props.onUpdate(formData));
-        } else {
-          updateStrategy.subscribe(formData => manager.update(formData));
+      updateExternal = (state, callback) => {
+        this.setState({ formData: state.formData });
+        if (callback) {
+          callback(state);
         }
       };
 
       handleChange = state => {
-        updateStrategy.onChange(state.formData, this.handleUpdate);
-        this.setState({ formData: state.formData });
-
-        let { onChange } = this.props;
-        if (onChange) {
-          onChange(state);
-        }
+        manager.onChange(state);
+        updateStrategy.onChange(state);
+        this.updateExternal(state, this.props.onChange);
       };
 
       handleSubmit = state => {
-        let submit = manager
-          .submit(state.formData)
-          .then(() => updateStrategy.stop());
+        manager.submit(state.formData).then(() => {
+          this.updateExternal(state, this.props.onSubmit);
+        });
+      };
 
-        let { onSubmit } = this.props;
-        if (onSubmit) {
-          submit.then(() => onSubmit(state));
+      handleUpdate = formData => {
+        this.setState({ formData });
+        if (this.props.onUpdate) {
+          this.props.onUpdate(formData);
         }
       };
 
