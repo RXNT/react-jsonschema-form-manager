@@ -65,7 +65,7 @@ export class RESTFormManager extends FormManager {
     this.formData = submitData;
     this.savedFormData = submitData;
 
-    return doFetch(req, this.credentials).then(res => res.json);
+    return doFetch(req, this.credentials).then(res => res.json());
   };
 
   onChange = ({ formData }) => {
@@ -92,6 +92,6 @@ export class RESTFormManager extends FormManager {
     this.savedFormData = this.formData;
 
     let req = this.toUpdateRequest();
-    return doFetch(req, this.credentials).then(res => res.json);
+    return doFetch(req, this.credentials).then(res => res.json());
   };
 }
