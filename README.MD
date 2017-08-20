@@ -33,7 +33,7 @@ this can be done like this:
 import React from "react";
 import ReactDOM from "react-dom";
 import Form from "react-jsonschema-form";
-import withManager, { LocalStorageFormManager, StaticConfigResolver, IntervalUpdateStrategy } from "react-jsonschema-form-manager";
+import withManager, { LocalStorageFormManager, StaticConfigResolver, intervalUpdateStrategy } from "react-jsonschema-form-manager";
 
 let config = {
   schema: {
@@ -54,7 +54,7 @@ let config = {
 
 let configResolver = new StaticConfigResolver(config);
 let manager = new LocalStorageFormManager();
-let updateStrategy = new IntervalUpdateStrategy(10000);
+let updateStrategy = intervalUpdateStrategy(10000);
 
 let FormToDisplay = withManager(manager, configResolver, updateStrategy)(Form);
 
@@ -339,8 +339,10 @@ with `JSON` of `formData` as a request.
   
 ### Custom storage
 
-As with `ConfigurationResolver` you can create your custom implementation for `FormManager`, which needs only 2 methods
-`submit` and `update`, both of which should return `Promise` with saved data.
+As with `ConfigurationResolver` you can create your custom implementation for `FormManager`, which needs only 3 methods
+- `submit` called when form is submitted, should return `Promise` that will be resolved after successful submission 
+- `update` called when form needs to update it's transient stay on the server, must also return a `Promise`
+- `onChange` called whenever form data changes, it's needed to manage formData state inside a manager
 
 For example `FormManager` using `SessionStorage` can look something like this:
 ```js
@@ -348,15 +350,18 @@ class SessionStorageFormManager {
   constructor(key = DEFAULT_KEY) {
     this.key = key;
   }
-  submit = formData => {
+  onChange = (state) => {
+    this.formData = state.formData;
+  }
+  submit = () => {
     return new Promise(resolve => {
-      sessionStorage.setItem(this.key, JSON.stringify(formData));
+      sessionStorage.setItem(this.key, JSON.stringify(this.formData));
       resolve(formData);
     });
   };
-  update = formData => {
+  update = () => {
     return new Promise(resolve => {
-      sessionStorage.setItem(this.key, JSON.stringify(formData));
+      sessionStorage.setItem(this.key, JSON.stringify(this.formData));
       resolve(formData);
     });
   }
@@ -373,13 +378,11 @@ For example
 ```js
 import React, { Component } from "react";
 import Form from "react-jsonschema-form";
-import { InstantUpdateStrategy }  from "react-jsonschema-form-manager";
+import { instantUpdateStrategy }  from "react-jsonschema-form-manager";
 
 ...
 
-let updateStrategy = new InstantUpdateStrategy();
-
-let FormToDisplay = withManager(configResolver, manager, updateStrategy)(Form);
+let FormToDisplay = withManager(configResolver, manager, instantUpdateStrategy)(Form);
 
 class ResultForm extends Component {
   render() {
@@ -397,16 +400,14 @@ There are 2 kinds of `UpdateStrategy` currently supported
 
 ### Instant update
 
-`InstantUpdateStrategy` updates request on every change of the form. This is a lot of work for the server and not recommended.
+`instantUpdateStrategy` updates request on every change of the form. This is a lot of work for the server and not recommended.
 
 ```js
 import React, { Component } from "react";
 import Form from "react-jsonschema-form";
-import { InstantUpdateStrategy }  from "react-jsonschema-form-manager";
+import { instantUpdateStrategy }  from "react-jsonschema-form-manager";
 
-let updateStrategy = new InstantUpdateStrategy();
-
-let FormToDisplay = withManager(configResolver, manager, updateStrategy)(Form);
+let FormToDisplay = withManager(configResolver, manager, instantUpdateStrategy)(Form);
 
 class ResultForm extends Component {
   render() {
@@ -418,15 +419,15 @@ class ResultForm extends Component {
 ```
 ### Interval updates
 
-`IntervalUpdateStrategy` updates request in specified interval of time, it takes `timeout` as parameter.
+`intervalUpdateStrategy` updates request in specified interval of time, it takes `timeout` as parameter.
 
 For example, in order to update server every 100 seconds configuration would look something like this:
 ```js
 import React, { Component } from "react";
 import Form from "react-jsonschema-form";
-import { IntervalUpdateStrategy }  from "react-jsonschema-form-manager";
+import { intervalUpdateStrategy }  from "react-jsonschema-form-manager";
 
-let updateStrategy = new IntervalUpdateStrategy(100000);
+let updateStrategy = intervalUpdateStrategy(100000);
 
 let FormToDisplay = withManager(configResolver, manager, updateStrategy)(Form);
 
@@ -441,20 +442,25 @@ class ResultForm extends Component {
 
 ### Custom update strategy
 
-As with other components you can easily override UpdateStrategy with custom implementation, that needs 2 methods `onChange` and `stop`.
+As with other components you can easily override `UpdateStrategy` with custom implementation.
+Construction of the object is done with a currying pattern, you can define any parameters you want on first call,
+and you will get `manager` when updateStrategy is going to be used. Returned object needs 2 methods `onChange` and `stop`.
 - `stop` get called when component unMounts, or after successful submit
-- `onChange` called when ever `formData` changes with `handleUpdate`
+- `onChange` called when ever `formData` changes, in original `Form`
 
 For example you want to update only on even dates, this would look something like this:
 ```js
-export class EvenDaysUpdateStrategy {
-  constructor() {}
-  onChange = (formData, handleUpdate) => {
-    if (new Date().getDate() % 2 == 0) {
-      handleUpdate(formData);
-    }
+export function evenDaysUpdateStrategy() {
+  return (manager) => {
+    return {
+      onChange: () => {
+          if (new Date().getDate() % 2 == 0) {
+            manager.update();
+          }
+        },
+      stop: function() {};
+    };
   };
-  stop = () => {};
 }
 ```
 

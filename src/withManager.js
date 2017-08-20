@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
+import deepEqual from "deep-equal";
 import { ignoreUpdateStrategy } from "./UpdateStrategy";
 
 class DefaultLoadingScreen extends Component {
@@ -93,6 +94,7 @@ export default function withManager(
       }
 
       updateExternal = (state, callback) => {
+        this.formData = state.formData;
         this.setState({ formData: state.formData });
         if (callback) {
           callback(state);
@@ -117,6 +119,15 @@ export default function withManager(
           this.props.onUpdate(formData);
         }
       };
+
+      shouldComponentUpdate(nextProps, nextState) {
+        let sameData = deepEqual(nextState.formData, this.formData);
+        let sameState =
+          nextState.isLoading === this.state.isLoading &&
+          nextState.isError === this.state.isError;
+        let sameProps = deepEqual(this.props, nextProps);
+        return !sameProps || !sameData || !sameState;
+      }
 
       render() {
         let { isLoading, isError, error, config, formData } = this.state;

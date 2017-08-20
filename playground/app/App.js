@@ -78,7 +78,7 @@ let storageManager = new LocalStorageFormManager();
 let FormToDisplay = withManager(
   staticResolver,
   storageManager,
-  instantUpdateStrategy
+  instantUpdateStrategy()
 )(playground(Form));
 
 function LastUpdated({ lastUpdated }) {
@@ -100,12 +100,15 @@ export default class ResultForm extends Component {
   handleUpdate = () => {
     storageManager.update();
   };
+  handleChange = () => {
+    console.log("Here I am");
+  };
   render() {
     return (
-      <div>
+      <div className="container">
         <LastUpdated lastUpdated={this.state.lastUpdated} />
         <FormToDisplay
-          onChange={() => console.log("Here I am")}
+          onChange={this.handleChange}
           onUpdate={this.handleUpdated}>
           <button className="btn" onClick={this.handleUpdate}>
             Update
