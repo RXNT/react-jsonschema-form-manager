@@ -33,7 +33,7 @@ let propTypes = {
   manager: PropTypes.shape({
     onChange: PropTypes.func.isRequired,
     submit: PropTypes.func.isRequired,
-    update: PropTypes.func.isRequired,
+    updateIfChanged: PropTypes.func.isRequired,
   }).isRequired,
   updateStrategy: PropTypes.shape({
     onChange: PropTypes.func.isRequired,
@@ -55,10 +55,12 @@ export default function withManager(
     "react-jsonschema-form-manager"
   );
 
-  const origUpdate = manager.update;
-  manager.update = () => {
-    let upd = origUpdate();
-    upd.then(formData => manager.onUpdate(formData));
+  const origUpdate = manager.updateIfChanged;
+  manager.updateIfChanged = (force = false) => {
+    let upd = origUpdate(force);
+    if (upd) {
+      upd.then(formData => manager.onUpdate(formData));
+    }
     return upd;
   };
 

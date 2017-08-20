@@ -4,7 +4,7 @@ import playground from "react-jsonschema-form-playground";
 import withManager, {
   StaticConfigResolver,
   LocalStorageFormManager,
-  instantUpdateStrategy,
+  intervalUpdateStrategy,
 } from "../../src";
 
 let config = {
@@ -78,7 +78,7 @@ let storageManager = new LocalStorageFormManager();
 let FormToDisplay = withManager(
   staticResolver,
   storageManager,
-  instantUpdateStrategy()
+  intervalUpdateStrategy(100)
 )(playground(Form));
 
 function LastUpdated({ lastUpdated }) {
@@ -97,8 +97,8 @@ export default class ResultForm extends Component {
   handleUpdated = () => {
     this.setState({ lastUpdated: new Date() });
   };
-  handleUpdate = () => {
-    storageManager.update();
+  triggerUpdate = () => {
+    storageManager.updateIfChanged(true);
   };
   handleChange = () => {
     console.log("Here I am");
@@ -110,7 +110,7 @@ export default class ResultForm extends Component {
         <FormToDisplay
           onChange={this.handleChange}
           onUpdate={this.handleUpdated}>
-          <button className="btn" onClick={this.handleUpdate}>
+          <button className="btn" onClick={this.triggerUpdate}>
             Update
           </button>
         </FormToDisplay>

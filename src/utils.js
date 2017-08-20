@@ -11,10 +11,10 @@ export function checkCredentials(credentials) {
 
 export function doFetch(req, credentials) {
   if (credentials === undefined || credentials === null) {
-    return fetch(req).then(res => res.json());
+    return fetch(req);
   } else if (typeof credentials === "object") {
-    return fetch(req, credentials).then(res => res.json());
+    return fetch(req, credentials);
   } else {
-    return fetch(credentials(req)).then(res => res.json());
+    return fetch(credentials(req));
   }
 }

@@ -9,11 +9,11 @@ export class LocalStorageFormManager extends FormManager {
   constructor(key = DEFAULT_KEY) {
     super();
     this.key = key;
+    this.formData = {};
   }
   doUpdate = () => {
-    let formData = this.formData;
-    localStorage.setItem(this.key, JSON.stringify(formData));
-    return Promise.resolve(formData);
+    localStorage.setItem(this.key, JSON.stringify(this.formData));
+    return Promise.resolve(this.formData);
   };
   submit = formData => {
     this.formData = formData ? formData : this.formData;
@@ -23,7 +23,18 @@ export class LocalStorageFormManager extends FormManager {
   onChange = ({ formData }) => {
     this.formData = formData;
   };
-  update = () => {
+  sameData = () => {
+    if (localStorage.getItem(this.key) !== null) {
+      let savedStr = localStorage.getItem(this.key);
+      let sameData = savedStr === JSON.stringify(this.formData);
+      return sameData;
+    }
+    return false;
+  };
+  updateIfChanged = (force = false) => {
+    if (!force && this.sameData()) {
+      return undefined;
+    }
     return this.doUpdate();
   };
 }
@@ -54,7 +65,7 @@ export class RESTFormManager extends FormManager {
     this.formData = submitData;
     this.savedFormData = submitData;
 
-    return doFetch(req, this.credentials);
+    return doFetch(req, this.credentials).then(res => res.json);
   };
 
   onChange = ({ formData }) => {
@@ -74,13 +85,13 @@ export class RESTFormManager extends FormManager {
       });
     }
   };
-  update = () => {
-    if (deepEqual(this.formData, this.savedFormData)) {
-      return Promise.resolve(this.formData);
+  updateIfChanged = (force = false) => {
+    if (!force && deepEqual(this.formData, this.savedFormData)) {
+      return undefined;
     }
     this.savedFormData = this.formData;
 
     let req = this.toUpdateRequest();
-    return doFetch(req, this.credentials);
+    return doFetch(req, this.credentials).then(res => res.json);
   };
 }

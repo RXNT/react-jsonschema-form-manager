@@ -341,7 +341,9 @@ with `JSON` of `formData` as a request.
 
 As with `ConfigurationResolver` you can create your custom implementation for `FormManager`, which needs only 3 methods
 - `submit` called when form is submitted, should return `Promise` that will be resolved after successful submission 
-- `update` called when form needs to update it's transient stay on the server, must also return a `Promise`
+- `updateIfChanged` called when form needs to update it's transient stay to the server. It must return either a `Promise`, if manager
+considers data changed and will trigger an update, or `undefined` if there is nothing to change.
+`updateIfChanged` accepts `force` flag that will always result in update. 
 - `onChange` called whenever form data changes, it's needed to manage formData state inside a manager
 
 For example `FormManager` using `SessionStorage` can look something like this:
@@ -358,8 +360,8 @@ class SessionStorageFormManager {
       sessionStorage.setItem(this.key, JSON.stringify(this.formData));
       resolve(formData);
     });
-  };
-  update = () => {
+  }
+  updateIfChanged = () => {
     return new Promise(resolve => {
       sessionStorage.setItem(this.key, JSON.stringify(this.formData));
       resolve(formData);
@@ -455,7 +457,7 @@ export function evenDaysUpdateStrategy() {
     return {
       onChange: () => {
           if (new Date().getDate() % 2 == 0) {
-            manager.update();
+            manager.updateIfChanged();
           }
         },
       stop: function() {};

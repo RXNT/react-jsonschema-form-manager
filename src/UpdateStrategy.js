@@ -7,14 +7,14 @@ export function ignoreUpdateStrategy() {
 
 export function instantUpdateStrategy(manager) {
   return {
-    onChange: () => manager.update(),
+    onChange: () => manager.updateIfChanged(),
     stop: function() {},
   };
 }
 
 export function intervalUpdateStrategy(period) {
   return manager => {
-    let interval = setInterval(() => manager.update(), period);
+    let interval = setInterval(() => manager.updateIfChanged(), period);
     return {
       onChange: () => {},
       stop: () => clearInterval(interval),
