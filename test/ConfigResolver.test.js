@@ -101,3 +101,20 @@ test("REST resolver", () => {
     .resolve()
     .then(readConf => expect(readConf).toEqual(conf));
 });
+
+test("REST resolver with defaults provided", () => {
+  let mod_conf = {};
+  const defaults = { defaultTestItem: "test" };
+  Object.assign(mod_conf, defaults, conf);
+
+  fetchMock.once("https://example.com/schema", JSON.stringify(conf));
+
+  let configResolver = new RESTConfigResolver(
+    "https://example.com/schema",
+    {},
+    defaults
+  );
+  return configResolver
+    .resolve()
+    .then(readConf => expect(readConf).toEqual(mod_conf));
+});

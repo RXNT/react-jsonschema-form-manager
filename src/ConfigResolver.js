@@ -17,10 +17,11 @@ export class StaticConfigResolver extends ConfigResolver {
 }
 
 export class RESTConfigResolver extends ConfigResolver {
-  constructor(url, credentials) {
+  constructor(url, credentials, defaults) {
     super();
     this.url = url;
     this.credentials = credentials;
+    this.defaults = defaults || {};
     if (
       credentials !== undefined &&
       credentials !== null &&
@@ -32,10 +33,21 @@ export class RESTConfigResolver extends ConfigResolver {
   }
 
   processResponse = res => {
+    let self = this;
+
     if (res.status != 200) {
       return res.json().then(error => Promise.reject(new Error(error)));
     }
-    return res.json();
+    return res
+      .json()
+      .then(function(conf) {
+        let mergedConf = {};
+        Object.assign(mergedConf, self.defaults, conf);
+        return mergedConf;
+      })
+      .catch(function(ex) {
+        return ex;
+      });
   };
 
   resolve = () => {
