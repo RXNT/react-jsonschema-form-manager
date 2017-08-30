@@ -2,29 +2,8 @@ import React, { Component } from "react";
 import PropTypes from "prop-types";
 import deepEqual from "deep-equal";
 import { ignoreUpdateStrategy } from "./UpdateStrategy";
-
-class DefaultLoadingScreen extends Component {
-  render() {
-    return (
-      <div className="container">
-        <h1>Loading</h1>
-      </div>
-    );
-  }
-}
-
-class DefaultErrorScreen extends Component {
-  render() {
-    return (
-      <div className="container">
-        <h4>Error</h4>
-        <h2>
-          {this.props.error.message}
-        </h2>
-      </div>
-    );
-  }
-}
+import DefaultErrorScreen from "./components/DefaultErrorScreen";
+import DefaultConfigManagementComponent from "./components/DefaultConfigManagementComponent";
 
 let propTypes = {
   manager: PropTypes.shape({
@@ -39,7 +18,7 @@ let propTypes = {
 };
 
 export default function withManager(
-  ConfigManagementComponent,
+  ConfigManagementComponent = DefaultConfigManagementComponent,
   manager,
   updateStrategy = ignoreUpdateStrategy
 ) {
@@ -63,7 +42,7 @@ export default function withManager(
 
   return (
     FormComponent,
-    LoadingScreen = DefaultLoadingScreen,
+    LoadingComponent,
     ErrorScreen = DefaultErrorScreen
   ) => {
     class FormWithManager extends Component {
@@ -74,6 +53,7 @@ export default function withManager(
         manager.onUpdate = this.handleUpdate;
 
         this.handleConfigChange = this.handleConfigChange.bind(this);
+        this.handleLoadReady = this.handleLoadReady.bind(this);
       }
 
       componentWillUnmount() {
@@ -123,6 +103,18 @@ export default function withManager(
           });
       };
 
+      handleLoadReady = configResolver => {
+        if (configResolver && configResolver.hasOwnProperty("resolve")) {
+          console.log("triggered");
+          this.handleConfigChange(configResolver);
+        } else {
+          let error = new Error(
+            "Cannot render form without a proper ConfigResolver instance."
+          );
+          this.setState({ isLoading: false, isError: true, error });
+        }
+      };
+
       shouldComponentUpdate(nextProps, nextState) {
         let sameData = deepEqual(nextState.formData, this.formData);
         let sameState =
@@ -136,7 +128,7 @@ export default function withManager(
         let { isLoading, isError, error, config, formData } = this.state;
 
         if (isLoading) {
-          return <LoadingScreen />;
+          return <LoadingComponent onReady={this.handleLoadReady} />;
         } else if (isError) {
           return <ErrorScreen error={error} />;
         } else {
