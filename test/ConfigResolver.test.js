@@ -102,6 +102,27 @@ test("REST resolver", () => {
     .then(readConf => expect(readConf).toEqual(conf));
 });
 
+test("REST resolver with mapping function provided", () => {
+  let mappingFunction = obj => {
+    let output = {
+      schema: obj.schema,
+    };
+    return output;
+  };
+  let mappedOutput = { schema: conf.schema };
+
+  fetchMock.once("https://example.com/schema", JSON.stringify(conf));
+  let configResolver = new RESTConfigResolver(
+    "https://example.com/schema",
+    {},
+    undefined,
+    mappingFunction
+  );
+  return configResolver
+    .resolve()
+    .then(readConf => expect(readConf).toEqual(mappedOutput));
+});
+
 test("REST resolver with defaults provided", () => {
   let mod_conf = {};
   const defaults = { defaultTestItem: "test" };
