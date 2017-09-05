@@ -136,6 +136,7 @@ export default function withManager(
           return (
             <div>
               <ConfigManagementComponent
+                {...configs}
                 onConfigChange={this.handleConfigChange}
               />
               <FormComponent
