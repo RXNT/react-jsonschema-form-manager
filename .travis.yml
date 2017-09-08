@@ -8,5 +8,7 @@ script:
 - npm run cs-check
 - npm run test-api:start
 - npm run test
-- npm run test-api:stop
 - cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+
+after_script:
+- npm run test-api:stop
