@@ -18,11 +18,18 @@ export class StaticConfigResolver extends ConfigResolver {
 }
 
 export class RESTConfigResolver extends ConfigResolver {
-  constructor(url, credentials, defaults) {
+  constructor(url, credentials, defaults, mapHandler) {
     super();
+
+    let inactiveMapHandler = obj => {
+      return obj;
+    };
+
     this.url = url;
     this.credentials = credentials;
     this.defaults = defaults || {};
+    this.mapHandler = mapHandler || inactiveMapHandler;
+
     if (
       credentials !== undefined &&
       credentials !== null &&
@@ -46,6 +53,7 @@ export class RESTConfigResolver extends ConfigResolver {
         Object.assign(mergedConf, self.defaults, conf);
         return mergedConf;
       })
+      .then(this.mapHandler)
       .catch(function(ex) {
         return ex;
       });
