@@ -1,5 +1,4 @@
 import { RESTConfigResolver, StaticConfigResolver } from "../src";
-import fetchMock from "fetch-mock";
 
 let conf = {
   schema: {
@@ -95,8 +94,7 @@ test("REST config resolver construction", () => {
 });
 
 test("REST resolver", () => {
-  fetchMock.once("https://example.com/schema", JSON.stringify(conf));
-  let configResolver = new RESTConfigResolver("https://example.com/schema");
+  let configResolver = new RESTConfigResolver("http://localhost:3000/conf");
   return configResolver
     .resolve()
     .then(readConf => expect(readConf).toEqual(conf));
@@ -107,10 +105,8 @@ test("REST resolver with defaults provided", () => {
   const defaults = { defaultTestItem: "test" };
   Object.assign(mod_conf, defaults, conf);
 
-  fetchMock.once("https://example.com/schema", JSON.stringify(conf));
-
   let configResolver = new RESTConfigResolver(
-    "https://example.com/schema",
+    "http://localhost:3000/conf",
     {},
     defaults
   );
