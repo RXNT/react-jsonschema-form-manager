@@ -82,11 +82,7 @@ let FormToDisplay = withManager(
 )(playground(Form));
 
 function LastUpdated({ lastUpdated }) {
-  return (
-    <div className="pull-right">
-      {lastUpdated.toString()}
-    </div>
-  );
+  return <div className="pull-right">{lastUpdated.toString()}</div>;
 }
 
 export default class ResultForm extends Component {
@@ -100,8 +96,8 @@ export default class ResultForm extends Component {
   triggerUpdate = () => {
     storageManager.updateIfChanged(true);
   };
-  handleChange = () => {
-    console.log("Here I am");
+  handleChange = ({ formData }) => {
+    console.log(`${JSON.stringify(formData)}`);
   };
   render() {
     return (

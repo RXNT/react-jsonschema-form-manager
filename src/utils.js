@@ -9,7 +9,7 @@ export function checkCredentials(credentials) {
   }
 }
 
-export function doFetch(req, credentials) {
+export function fetchWithCredentials(req, credentials) {
   if (credentials === undefined || credentials === null) {
     return fetch(req);
   } else if (typeof credentials === "object") {

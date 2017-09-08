@@ -3,27 +3,21 @@ import PropTypes from "prop-types";
 import deepEqual from "deep-equal";
 import { ignoreUpdateStrategy } from "./UpdateStrategy";
 
-class DefaultLoadingScreen extends Component {
-  render() {
-    return (
-      <div className="container">
-        <h1>Loading</h1>
-      </div>
-    );
-  }
+function DefaultLoadingScreen() {
+  return (
+    <div className="container">
+      <h1>Loading</h1>
+    </div>
+  );
 }
 
-class DefaultErrorScreen extends Component {
-  render() {
-    return (
-      <div className="container">
-        <h4>Error</h4>
-        <h2>
-          {this.props.error.message}
-        </h2>
-      </div>
-    );
-  }
+function DefaultErrorScreen({ error: { message } }) {
+  return (
+    <div className="container">
+      <h4>Error</h4>
+      <h2>{message}</h2>
+    </div>
+  );
 }
 
 let propTypes = {
@@ -64,11 +58,7 @@ export default function withManager(
     return upd;
   };
 
-  return (
-    FormComponent,
-    LoadingScreen = DefaultLoadingScreen,
-    ErrorScreen = DefaultErrorScreen
-  ) => {
+  return (FormComponent, LoadingScreen, ErrorScreen) => {
     class FormWithManager extends Component {
       constructor(props) {
         super(props);
@@ -134,9 +124,13 @@ export default function withManager(
       render() {
         let { isLoading, isError, error, config, formData } = this.state;
         if (isLoading) {
-          return <LoadingScreen />;
+          return LoadingScreen ? <LoadingScreen /> : <DefaultLoadingScreen />;
         } else if (isError) {
-          return <ErrorScreen error={error} />;
+          return ErrorScreen ? (
+            <ErrorScreen error={error} />
+          ) : (
+            <DefaultErrorScreen error={error} />
+          );
         } else {
           let configs = Object.assign({}, this.props, config, { formData });
           return (

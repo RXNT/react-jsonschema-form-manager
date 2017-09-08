@@ -1,4 +1,5 @@
 import "whatwg-fetch";
+import { fetchWithCredentials } from "./utils";
 
 class ConfigResolver {}
 
@@ -51,13 +52,8 @@ export class RESTConfigResolver extends ConfigResolver {
   };
 
   resolve = () => {
-    if (this.credentials === undefined || this.credentials === null) {
-      return fetch(this.url).then(this.processResponse);
-    } else if (typeof this.credentials === "object") {
-      return fetch(this.url, this.credentials).then(this.processResponse);
-    } else {
-      let req = new Request(this.url);
-      return fetch(this.credentials(req)).then(this.processResponse);
-    }
+    return fetchWithCredentials(new Request(this.url), this.credentials).then(
+      this.processResponse
+    );
   };
 }
