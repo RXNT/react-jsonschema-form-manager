@@ -27,6 +27,9 @@ class DefaultErrorScreen extends Component {
 }
 
 let propTypes = {
+  configResolver: PropTypes.shape({
+    resolve: PropTypes.func.isRequired,
+  }).isRequired,
   manager: PropTypes.shape({
     onChange: PropTypes.func.isRequired,
     submit: PropTypes.func.isRequired,
@@ -39,7 +42,7 @@ let propTypes = {
 };
 
 export default function withManager(
-  ConfigManagementComponent,
+  configResolver,
   manager,
   updateStrategy = ignoreUpdateStrategy
 ) {
@@ -47,7 +50,7 @@ export default function withManager(
 
   PropTypes.checkPropTypes(
     propTypes,
-    { manager, updateStrategy },
+    { manager, configResolver, updateStrategy },
     "props",
     "react-jsonschema-form-manager"
   );
@@ -73,7 +76,19 @@ export default function withManager(
         this.state = { isLoading: true, isError: false };
         manager.onUpdate = this.handleUpdate;
 
-        this.handleConfigChange = this.handleConfigChange.bind(this);
+        configResolver
+          .resolve()
+          .then(config => {
+            this.setState({
+              isLoading: false,
+              isEqual: false,
+              config,
+              formData: config.formData,
+            });
+          })
+          .catch(error => {
+            this.setState({ isLoading: false, isError: true, error });
+          });
       }
 
       componentWillUnmount() {
@@ -107,22 +122,6 @@ export default function withManager(
         }
       };
 
-      handleConfigChange = configResolver => {
-        configResolver
-          .resolve()
-          .then(config => {
-            this.setState({
-              isLoading: false,
-              isEqual: false,
-              config,
-              formData: config.formData,
-            });
-          })
-          .catch(error => {
-            this.setState({ isLoading: false, isError: true, error });
-          });
-      };
-
       shouldComponentUpdate(nextProps, nextState) {
         let sameData = deepEqual(nextState.formData, this.formData);
         let sameState =
@@ -134,7 +133,6 @@ export default function withManager(
 
       render() {
         let { isLoading, isError, error, config, formData } = this.state;
-
         if (isLoading) {
           return <LoadingScreen />;
         } else if (isError) {
@@ -142,16 +140,11 @@ export default function withManager(
         } else {
           let configs = Object.assign({}, this.props, config, { formData });
           return (
-            <div>
-              <ConfigManagementComponent
-                onConfigChange={this.handleConfigChange}
-              />
-              <FormComponent
-                {...configs}
-                onSubmit={this.handleSubmit}
-                onChange={this.handleChange}
-              />
-            </div>
+            <FormComponent
+              {...configs}
+              onSubmit={this.handleSubmit}
+              onChange={this.handleChange}
+            />
           );
         }
       }
