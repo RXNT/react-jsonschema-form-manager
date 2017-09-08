@@ -1,9 +1,5 @@
 import "whatwg-fetch";
 
-let defaultMapFunction = obj => {
-  return obj;
-};
-
 class ConfigResolver {}
 
 export class StaticConfigResolver extends ConfigResolver {
@@ -21,14 +17,11 @@ export class StaticConfigResolver extends ConfigResolver {
 }
 
 export class RESTConfigResolver extends ConfigResolver {
-  constructor(url, credentials, defaults, mapFunction) {
+  constructor(url, credentials, defaults) {
     super();
-
     this.url = url;
     this.credentials = credentials;
     this.defaults = defaults || {};
-    this.mapFunction = mapFunction || defaultMapFunction;
-
     if (
       credentials !== undefined &&
       credentials !== null &&
@@ -52,7 +45,6 @@ export class RESTConfigResolver extends ConfigResolver {
         Object.assign(mergedConf, self.defaults, conf);
         return mergedConf;
       })
-      .then(this.mapFunction)
       .catch(function(ex) {
         return ex;
       });
