@@ -100,8 +100,8 @@ test("REST resolver", () => {
     .then(readConf => expect(readConf).toEqual(conf));
 });
 
-test("REST resolver with mapping function provided", () => {
-  let mappingFunction = obj => {
+test("REST resolver with output handler provided", () => {
+  let outputHandler = obj => {
     let output = {
       schema: obj.schema,
     };
@@ -112,25 +112,27 @@ test("REST resolver with mapping function provided", () => {
   let configResolver = new RESTConfigResolver(
     "http://localhost:3000/conf",
     {},
-    undefined,
-    mappingFunction
+    outputHandler
   );
   return configResolver
     .resolve()
     .then(readConf => expect(readConf).toEqual(mappedOutput));
 });
 
-test("REST resolver with defaults provided", () => {
-  let mod_conf = {};
+test("REST resolver with output handler that provides defaults", () => {
   const defaults = { defaultTestItem: "test" };
-  Object.assign(mod_conf, defaults, conf);
+
+  let outputHandler = obj => {
+    return Object.assign({}, defaults, obj);
+  };
+  let mappedOutput = Object.assign({}, defaults, conf);
 
   let configResolver = new RESTConfigResolver(
     "http://localhost:3000/conf",
     {},
-    defaults
+    outputHandler
   );
   return configResolver
     .resolve()
-    .then(readConf => expect(readConf).toEqual(mod_conf));
+    .then(readConf => expect(readConf).toEqual(mappedOutput));
 });

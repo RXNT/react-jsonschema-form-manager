@@ -18,17 +18,16 @@ export class StaticConfigResolver extends ConfigResolver {
 }
 
 export class RESTConfigResolver extends ConfigResolver {
-  constructor(url, credentials, defaults, mapHandler) {
+  constructor(url, credentials, outputHandler) {
     super();
 
-    let inactiveMapHandler = obj => {
+    let inactiveOutputHandler = obj => {
       return obj;
     };
 
     this.url = url;
     this.credentials = credentials;
-    this.defaults = defaults || {};
-    this.mapHandler = mapHandler || inactiveMapHandler;
+    this.outputHandler = outputHandler || inactiveOutputHandler;
 
     if (
       credentials !== undefined &&
@@ -41,8 +40,6 @@ export class RESTConfigResolver extends ConfigResolver {
   }
 
   processResponse = res => {
-    let self = this;
-
     if (res.status != 200) {
       return res.json().then(error => Promise.reject(new Error(error)));
     }
@@ -50,10 +47,10 @@ export class RESTConfigResolver extends ConfigResolver {
       .json()
       .then(function(conf) {
         let mergedConf = {};
-        Object.assign(mergedConf, self.defaults, conf);
+        Object.assign(mergedConf, conf);
         return mergedConf;
       })
-      .then(this.mapHandler)
+      .then(this.outputHandler)
       .catch(function(ex) {
         return ex;
       });
