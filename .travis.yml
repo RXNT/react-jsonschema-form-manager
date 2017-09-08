@@ -3,10 +3,10 @@ language:
 - node_js
 node_js:
 - "6"
-env:
-- ACTION="run lint"
-#- ACTION="run cs-check"
-- ACTION="run dist"
-- ACTION="test && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
 script:
-- npm $ACTION
+- npm run lint
+- npm run cs-check
+- npm run test-api:start
+- npm run test
+- npm run test-api:stop
+- cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
