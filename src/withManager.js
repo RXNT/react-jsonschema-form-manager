@@ -21,8 +21,8 @@ function DefaultErrorScreen({ error: { message } }) {
 }
 
 let propTypes = {
-  configResolver: PropTypes.shape({
-    resolve: PropTypes.func.isRequired,
+  configPromise: PropTypes.shape({
+    then: PropTypes.func.isRequired,
   }).isRequired,
   manager: PropTypes.shape({
     onChange: PropTypes.func.isRequired,
@@ -36,7 +36,7 @@ let propTypes = {
 };
 
 export default function withManager(
-  configResolver,
+  configPromise,
   manager,
   updateStrategy = ignoreUpdateStrategy
 ) {
@@ -44,7 +44,7 @@ export default function withManager(
 
   PropTypes.checkPropTypes(
     propTypes,
-    { manager, configResolver, updateStrategy },
+    { configPromise, manager, updateStrategy },
     "props",
     "react-jsonschema-form-manager"
   );
@@ -63,22 +63,12 @@ export default function withManager(
       constructor(props) {
         super(props);
 
-        this.state = { isLoading: true, isError: false };
+        this.state = {
+          isLoading: true,
+          isError: false,
+          configPromise: configPromise,
+        };
         manager.onUpdate = this.handleUpdate;
-
-        configResolver
-          .resolve()
-          .then(config => {
-            this.setState({
-              isLoading: false,
-              isEqual: false,
-              config,
-              formData: config.formData,
-            });
-          })
-          .catch(error => {
-            this.setState({ isLoading: false, isError: true, error });
-          });
       }
 
       componentWillUnmount() {
@@ -119,6 +109,21 @@ export default function withManager(
           nextState.isError === this.state.isError;
         let sameProps = deepEqual(this.props, nextProps);
         return !sameProps || !sameData || !sameState;
+      }
+
+      componentWillMount() {
+        this.state.configPromise
+          .then(config => {
+            this.setState({
+              isLoading: false,
+              isEqual: false,
+              config,
+              formData: config.formData,
+            });
+          })
+          .catch(error => {
+            this.setState({ isLoading: false, isError: true, error });
+          });
       }
 
       render() {
