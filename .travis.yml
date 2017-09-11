@@ -8,8 +8,4 @@ script:
 - npm run lint
 - npm run cs-check
 - npm run dist
-- npm run test-api:start
 - npm test && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
-
-after_script:
-- npm run test-api:stop
