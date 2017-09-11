@@ -47,8 +47,8 @@
     "node": ">=6"
   },
   "peerDependencies": {
-    "react": "15.0.0",
-    "react-jsonschema-form": "0.50.1"
+    "react": "^15.0.0",
+    "react-jsonschema-form": "~0.50.1"
   },
   "dependencies": {
     "deep-equal": "1.0.1",
