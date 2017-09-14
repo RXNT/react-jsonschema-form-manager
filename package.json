@@ -16,8 +16,6 @@
     "publish-to-gh-pages": "npm run build:playground && gh-pages --dist build/",
     "publish-to-npm": "npm run dist &&  npm publish && npm version patch",
     "start": "webpack-dev-server",
-    "test-api:start": "json-server ./test/test-server.json & npm run lint",
-    "test-api:stop": "ps -ef | grep -i json-server | grep -i node | awk '{print $2;}' | xargs kill",
     "tdd": "jest --watchAll",
     "test": "jest"
   },

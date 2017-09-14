@@ -52,6 +52,12 @@ module.exports = {
     overlay: {
       warnings: true,
       errors: true
+    },
+    proxy: {
+      '/posts': {
+        target: 'http://localhost:3000/',
+        secure: false
+      },
     }
   },
 };

@@ -23,6 +23,7 @@ export class LocalStorageFormManager extends FormManager {
   onChange = ({ formData }) => {
     this.formData = formData;
   };
+
   sameData = () => {
     if (localStorage.getItem(this.key) !== null) {
       let savedStr = localStorage.getItem(this.key);
@@ -40,9 +41,9 @@ export class LocalStorageFormManager extends FormManager {
 }
 /* eslint no-unused-vars: 0*/
 class RESTAPI {
-  constructor(url, credentials, id = "id") {
-    this.id = id;
+  constructor(url, id, credentials) {
     this.url = url;
+    this.idAttribute = id;
     this.credentials = credentials;
   }
   post = formData => {
@@ -50,18 +51,13 @@ class RESTAPI {
       method: "POST",
       body: JSON.stringify(formData),
     });
-    return fetchWithCredentials(postReq, this.credentials)
-      .then(res => res.json())
-      .then(resp => {
-        let key = resp[this.id];
-        if (key) {
-          this.url = `${this.url}/${key}`;
-        }
-        return resp;
-      });
+    return fetchWithCredentials(postReq, this.credentials).then(res =>
+      res.json()
+    );
   };
   put = formData => {
-    let putReq = new Request(this.url, {
+    let putUrl = `${this.url}/${formData[this.idAttribute]}`;
+    let putReq = new Request(putUrl, {
       method: "PUT",
       body: JSON.stringify(formData),
     });
@@ -70,7 +66,8 @@ class RESTAPI {
     );
   };
   patch = (oldFormData, formData) => {
-    let patchReq = new Request(this.url, {
+    let patchUrl = `${this.url}/${formData[this.idAttribute]}`;
+    let patchReq = new Request(patchUrl, {
       method: "PATCH",
       body: rfc6902.createPatch(oldFormData, formData),
     });
@@ -87,12 +84,11 @@ class RESTAPI {
 }
 
 export class RESTFormManager extends FormManager {
-  constructor(url, credentials, id = "id", patch = false) {
+  constructor(url, idAttribute = "id", credentials, patch = false) {
     super();
-    this.url = url;
-    this.id = id;
+    this.idAttribute = idAttribute;
+    this.api = new RESTAPI(url, idAttribute, credentials);
     this.patch = patch;
-    this.credentials = credentials;
 
     this.formData = {};
     this.savedFormData = {};
@@ -102,48 +98,32 @@ export class RESTFormManager extends FormManager {
 
   onChange = ({ formData }) => {
     this.formData = formData;
+    if (this.id && !formData[this.idAttribute]) {
+      this.formData[this.idAttribute] = this.id;
+    }
   };
 
-  isSaved = () => this.formData[this.id] !== undefined;
-
-  toSubmitRequest = formData => {
-    return new Request(this.url, {
-      method: "POST",
-      body: JSON.stringify(formData),
+  submit = formData => {
+    return this.api.post(formData).then(saved => {
+      this.id = saved[this.idAttribute];
+      return saved;
     });
   };
-  submit = formData => {
-    let submitData = formData ? formData : this.formData;
-    let req = this.toSubmitRequest(submitData);
 
-    this.formData = submitData;
-    this.savedFormData = submitData;
+  isNew = () => this.formData[this.idAttribute] === undefined;
 
-    return fetchWithCredentials(req, this.credentials).then(res => res.json());
-  };
-
-  toUpdateRequest = () => {
-    if (!this.isSaved()) {
-      return this.toSubmitRequest(this.formData);
-    } else if (this.patch) {
-      return new Request(this.url, {
-        method: "PATCH",
-        body: rfc6902.createPatch(this.savedFormData, this.formData),
-      });
-    } else {
-      return new Request(this.url, {
-        method: "PUT",
-        body: JSON.stringify(this.formData),
-      });
-    }
-  };
   updateIfChanged = (force = false) => {
     if (!force && deepEqual(this.formData, this.savedFormData)) {
-      return undefined;
+      return Promise.resolve(this.formData);
     }
-    this.savedFormData = this.formData;
-
-    let req = this.toUpdateRequest();
-    return fetchWithCredentials(req, this.credentials).then(res => res.json());
+    if (this.isNew()) {
+      return this.submit(this.formData);
+    } else if (this.patch) {
+      this.savedFormData = this.formData;
+      return this.api.patch(this.savedFormData, this.formData);
+    } else {
+      this.savedFormData = this.formData;
+      return this.api.put(this.formData);
+    }
   };
 }

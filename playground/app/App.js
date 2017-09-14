@@ -2,8 +2,7 @@ import React, { Component } from "react";
 import Form from "react-jsonschema-form";
 import playground from "react-jsonschema-form-playground";
 import withManager, {
-  StaticConfigResolver,
-  LocalStorageFormManager,
+  RESTFormManager,
   intervalUpdateStrategy,
 } from "../../src";
 
@@ -12,6 +11,9 @@ let config = {
     type: "object",
     required: ["firstName", "lastName"],
     properties: {
+      id: {
+        type: "string",
+      },
       firstName: {
         type: "string",
         title: "First name",
@@ -72,13 +74,13 @@ let config = {
   },
 };
 
-let staticResolver = new StaticConfigResolver(config, 100);
-let storageManager = new LocalStorageFormManager();
+let configPromise = Promise.resolve(config);
+let storageManager = new RESTFormManager("/posts");
 
 let FormToDisplay = withManager(
-  staticResolver,
+  configPromise,
   storageManager,
-  intervalUpdateStrategy(100)
+  intervalUpdateStrategy(10000)
 )(playground(Form));
 
 function LastUpdated({ lastUpdated }) {
