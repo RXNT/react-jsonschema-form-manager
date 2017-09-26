@@ -41,9 +41,8 @@ export class LocalStorageFormManager extends FormManager {
 }
 /* eslint no-unused-vars: 0*/
 class RESTAPI {
-  constructor(url, id, credentials) {
+  constructor(url, credentials) {
     this.url = url;
-    this.idAttribute = id;
     this.credentials = credentials;
   }
   post = formData => {
@@ -55,8 +54,8 @@ class RESTAPI {
       res.json()
     );
   };
-  put = formData => {
-    let putUrl = `${this.url}/${formData[this.idAttribute]}`;
+  put = (id, formData) => {
+    let putUrl = `${this.url}/${id}`;
     let putReq = new Request(putUrl, {
       method: "PUT",
       body: JSON.stringify(formData),
@@ -65,8 +64,8 @@ class RESTAPI {
       res.json()
     );
   };
-  patch = (oldFormData, formData) => {
-    let patchUrl = `${this.url}/${formData[this.idAttribute]}`;
+  patch = (id, oldFormData, formData) => {
+    let patchUrl = `${this.url}/${id}`;
     let patchReq = new Request(patchUrl, {
       method: "PATCH",
       body: rfc6902.createPatch(oldFormData, formData),
@@ -75,19 +74,13 @@ class RESTAPI {
       res.json()
     );
   };
-  delete = () => {
-    let deleteReq = new Request(this.url, {
-      method: "DELETE",
-    });
-    return fetchWithCredentials(deleteReq);
-  };
 }
 
 export class RESTFormManager extends FormManager {
-  constructor(url, idAttribute = "id", credentials, patch = false) {
+  constructor(url, id = "id", credentials, patch = false) {
     super();
-    this.idAttribute = idAttribute;
-    this.api = new RESTAPI(url, idAttribute, credentials);
+    this.toID = typeof id === "function" ? id : formData => formData[id];
+    this.api = new RESTAPI(url, id, credentials);
     this.patch = patch;
 
     this.formData = {};
@@ -98,19 +91,19 @@ export class RESTFormManager extends FormManager {
 
   onChange = ({ formData }) => {
     this.formData = formData;
-    if (this.id && !formData[this.idAttribute]) {
-      this.formData[this.idAttribute] = this.id;
+    if (!this.id) {
+      this.id = this.toID(formData);
     }
   };
 
-  submit = formData => {
+  submit = (formData = {}) => {
     return this.api.post(formData).then(saved => {
-      this.id = saved[this.idAttribute];
+      this.id = this.toID(saved);
       return saved;
     });
   };
 
-  isNew = () => this.formData[this.idAttribute] === undefined;
+  isNew = () => this.id === undefined;
 
   updateIfChanged = (force = false) => {
     if (!force && deepEqual(this.formData, this.savedFormData)) {
@@ -120,10 +113,10 @@ export class RESTFormManager extends FormManager {
       return this.submit(this.formData);
     } else if (this.patch) {
       this.savedFormData = this.formData;
-      return this.api.patch(this.savedFormData, this.formData);
+      return this.api.patch(this.id, this.savedFormData, this.formData);
     } else {
       this.savedFormData = this.formData;
-      return this.api.put(this.formData);
+      return this.api.put(this.id, this.formData);
     }
   };
 }
