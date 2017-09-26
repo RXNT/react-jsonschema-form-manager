@@ -80,7 +80,7 @@ export class RESTFormManager extends FormManager {
   constructor(url, id = "id", credentials, patch = false) {
     super();
     this.toID = typeof id === "function" ? id : formData => formData[id];
-    this.api = new RESTAPI(url, id, credentials);
+    this.api = new RESTAPI(url, credentials);
     this.patch = patch;
 
     this.formData = {};
