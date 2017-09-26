@@ -16,6 +16,6 @@ export function fetchWithCredentials(req, credentials) {
     return fetch(req, credentials);
   } else {
     let signedReq = credentials(req);
-    return Promise.resolve(signedReq).then(req => fetch(credentials(req)));
+    return Promise.resolve(signedReq).then(req => fetch(req));
   }
 }
