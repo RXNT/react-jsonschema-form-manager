@@ -72,7 +72,7 @@ export default function withManager(
       }
 
       componentWillUnmount() {
-        manager.stop();
+        updateStrategy.stop();
       }
 
       updateExternal = (state, callback) => {
