@@ -1,5 +1,5 @@
 import rfc6902 from "rfc6902";
-import deepEqual from "deep-equal";
+import { deepEquals } from "react-jsonschema-form/lib/utils";
 import { fetchWithCredentials, checkCredentials } from "./utils";
 class FormManager {}
 
@@ -106,7 +106,7 @@ export class RESTFormManager extends FormManager {
   isNew = () => this.id === undefined;
 
   updateIfChanged = (force = false) => {
-    if (!force && deepEqual(this.formData, this.savedFormData)) {
+    if (!force && deepEquals(this.formData, this.savedFormData)) {
       return Promise.resolve(this.formData);
     }
     if (this.isNew()) {

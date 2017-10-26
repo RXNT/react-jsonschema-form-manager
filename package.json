@@ -46,11 +46,10 @@
   },
   "peerDependencies": {
     "react": "^15.0.0",
-    "react-jsonschema-form": "~0.50.1"
+    "prop-types": "^15.5.10",
+    "react-jsonschema-form": "^0.51.0"
   },
   "dependencies": {
-    "deep-equal": "1.0.1",
-    "prop-types": "15.5.10",
     "rfc6902": "1.3.0"
   },
   "devDependencies": {
@@ -64,7 +63,6 @@
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-polyfill": "^6.26.0",
     "babel-preset-env": "^1.6.0",
-    "babel-preset-es2015": "^6.24.1",
     "babel-preset-react": "^6.24.1",
     "babel-register": "^6.26.0",
     "codemirror": "^5.29.0",
@@ -94,8 +92,7 @@
     "react-addons-test-utils": "^15.6.0",
     "react-codemirror": "^1.0.0",
     "react-dom": "^15.6.1",
-    "react-jsonschema-form": "0.50.1",
-    "react-jsonschema-form-playground": "0.0.4",
+    "react-jsonschema-form": "^0.51.0",
     "react-test-renderer": "^15.6.1",
     "react-transform-catch-errors": "^1.0.2",
     "react-transform-hmr": "^1.0.4",

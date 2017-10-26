@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import Form from "react-jsonschema-form";
-import playground from "react-jsonschema-form-playground";
 import withManager, {
   RESTFormManager,
   intervalUpdateStrategy,
@@ -81,7 +80,7 @@ let FormToDisplay = withManager(
   configPromise,
   storageManager,
   intervalUpdateStrategy(10000)
-)(playground(Form));
+)(Form);
 
 function LastUpdated({ lastUpdated }) {
   return <div className="pull-right">{lastUpdated.toString()}</div>;
